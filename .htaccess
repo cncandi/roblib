@@ -1,0 +1,29 @@
+# ROBLIB – Apache-Konfiguration
+
+# config.php und data/ niemals direkt ausliefern
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "functions.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # data/robots.json nicht direkt erreichbar
+    RewriteRule ^data/.*$ - [F,L]
+</IfModule>
+
+# Verzeichnis-Listing deaktivieren
+Options -Indexes
+
+# PHP-Fehler nicht im Browser anzeigen
+php_flag display_errors Off
+
+# Upload-Größe (anpassen falls nötig, oder in php.ini setzen)
+php_value upload_max_filesize 64M
+php_value post_max_size       68M
