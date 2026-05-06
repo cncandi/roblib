@@ -357,6 +357,40 @@ footer a { color: var(--orange); text-decoration: none; }
   .hero, .filter-bar, .grid { padding-left: 12px; padding-right: 12px; }
   .grid { grid-template-columns: 1fr; }
 }
+.btn-edit {
+  display:block;width:100%;margin-top:6px;padding:9px;
+  background:rgba(37,99,235,.2);color:#60a5fa;
+  border:1px solid rgba(37,99,235,.4);border-radius:4px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;transition:background .15s;
+}
+.btn-edit:hover{background:rgba(37,99,235,.4);}
+.rl-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;
+  align-items:center;justify-content:center;z-index:1000;}
+.rl-modal{background:#0d1e2e;border:1px solid #2563eb;border-radius:8px;
+  width:min(520px,95vw);max-height:90vh;overflow-y:auto;}
+.rl-modal-head{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);
+  font-family:var(--mono);font-size:13px;color:#60a5fa;}
+.rl-close{background:none;border:none;color:#6a8fa8;font-size:18px;cursor:pointer;padding:2px 8px;}
+.rl-close:hover{color:#fff;}
+.rl-modal-body{padding:16px;}
+.rl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.rl-grid label{display:flex;flex-direction:column;font-family:var(--mono);
+  font-size:11px;color:#6a8fa8;gap:4px;text-transform:uppercase;letter-spacing:.05em;}
+.rl-grid input,.rl-grid textarea{background:#0f2030;border:1px solid rgba(255,255,255,.15);
+  border-radius:4px;padding:6px 8px;color:#d8e8f0;font-family:var(--mono);font-size:12px;outline:none;}
+.rl-grid input:focus{border-color:#2563eb;}
+.rl-span2{grid-column:1/-1;}
+.rl-thumb-preview{width:100%;max-height:120px;object-fit:contain;margin-top:6px;
+  border-radius:4px;border:1px solid rgba(255,255,255,.1);}
+.rl-save{width:100%;padding:9px;background:#2563eb;color:#fff;border:none;
+  border-radius:5px;font-family:var(--mono);font-size:13px;cursor:pointer;margin-top:4px;}
+.rl-save:hover{background:#1d4ed8;}
+.rl-save:disabled{opacity:.5;cursor:default;}
+.rl-msg{padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:12px;margin-bottom:10px;}
+.rl-ok{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);}
+.rl-err{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
 .btn-delete {
   display:block;width:100%;margin-top:6px;padding:9px;
   background:rgba(204,34,0,.2);color:#ff6040;
@@ -534,6 +568,88 @@ function rlDelete(btn){
     .then(function(d){if(d.ok)location.reload();else alert('Fehler: '+d.error);})
     .catch(function(e){alert('Fehler: '+e.message);});
 }
+
+var _rlId = '';
+function rlEdit(btn) {
+  _rlId = btn.getAttribute('data-id');
+  document.getElementById('rl-name').value      = btn.getAttribute('data-name');
+  document.getElementById('rl-marke').value     = btn.getAttribute('data-marke');
+  document.getElementById('rl-modell').value    = btn.getAttribute('data-modell');
+  document.getElementById('rl-achsen').value    = btn.getAttribute('data-achsen');
+  document.getElementById('rl-reichweite').value= btn.getAttribute('data-reichweite');
+  document.getElementById('rl-nutzlast').value  = btn.getAttribute('data-nutzlast');
+  document.getElementById('rl-gewicht').value   = btn.getAttribute('data-gewicht');
+  document.getElementById('rl-wdh').value       = btn.getAttribute('data-wdh');
+  var thumb = btn.getAttribute('data-thumb');
+  var img = document.getElementById('rl-thumb-img');
+  if (thumb) { img.src=thumb; img.style.display='block'; } else { img.style.display='none'; }
+  document.getElementById('rl-thumb-file').value = '';
+  document.getElementById('rlMsg').style.display = 'none';
+  document.getElementById('rlModal').style.display = 'flex';
+}
+function rlSave() {
+  var pass = prompt('Admin-Passwort:');
+  if (pass === null) return;
+  var btn = document.getElementById('rlSave');
+  btn.disabled = true; btn.textContent = 'Speichern...';
+  var fd = new FormData();
+  fd.append('action','update'); fd.append('id',_rlId);
+  fd.append('user','admin');    fd.append('pass',pass);
+  fd.append('name',   document.getElementById('rl-name').value);
+  fd.append('marke',  document.getElementById('rl-marke').value);
+  fd.append('modell', document.getElementById('rl-modell').value);
+  fd.append('achsen', document.getElementById('rl-achsen').value);
+  fd.append('reichweite_mm', document.getElementById('rl-reichweite').value);
+  fd.append('nutzlast_kg',   document.getElementById('rl-nutzlast').value);
+  fd.append('gewicht_kg',    document.getElementById('rl-gewicht').value);
+  fd.append('wiederholgenauigkeit_mm', document.getElementById('rl-wdh').value);
+  var thumbFile = document.getElementById('rl-thumb-file').files[0];
+  if (thumbFile) fd.append('thumb', thumbFile, thumbFile.name);
+  fetch('api.php', {method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){ location.reload(); }
+      else {
+        var msg=document.getElementById('rlMsg');
+        msg.textContent='Fehler: '+d.error; msg.className='rl-msg rl-err';
+        msg.style.display=''; btn.disabled=false; btn.textContent='Speichern';
+      }
+    })
+    .catch(function(e){
+      var msg=document.getElementById('rlMsg');
+      msg.textContent='Fehler: '+e.message; msg.className='rl-msg rl-err';
+      msg.style.display=''; btn.disabled=false; btn.textContent='Speichern';
+    });
+}
 </script>
+
+<!-- Edit Modal -->
+<div id="rlModal" class="rl-overlay" style="display:none">
+  <div class="rl-modal">
+    <div class="rl-modal-head">
+      <span>&#x270E; Roboter bearbeiten</span>
+      <button class="rl-close" onclick="document.getElementById('rlModal').style.display='none'">&#x2715;</button>
+    </div>
+    <div class="rl-modal-body">
+      <div id="rlMsg" class="rl-msg" style="display:none"></div>
+      <div class="rl-grid">
+        <label class="rl-span2">Name<input id="rl-name" type="text"></label>
+        <label>Marke<input id="rl-marke" type="text"></label>
+        <label>Modell<input id="rl-modell" type="text"></label>
+        <label>Achsen<input id="rl-achsen" type="number" min="1" max="9"></label>
+        <label>Reichweite (mm)<input id="rl-reichweite" type="number"></label>
+        <label>Nutzlast (kg)<input id="rl-nutzlast" type="number" step="0.1"></label>
+        <label>Gewicht (kg)<input id="rl-gewicht" type="number" step="0.1"></label>
+        <label>Wiederholgenaui. (mm)<input id="rl-wdh" type="number" step="0.001"></label>
+        <label class="rl-span2">Thumbnail
+          <input id="rl-thumb-file" type="file" accept="image/*"
+            onchange="var r=new FileReader();r.onload=function(e){var img=document.getElementById('rl-thumb-img');img.src=e.target.result;img.style.display='block';};r.readAsDataURL(this.files[0]);">
+          <img id="rl-thumb-img" class="rl-thumb-preview" style="display:none">
+        </label>
+      </div>
+      <button class="rl-save" id="rlSave" onclick="rlSave()">Speichern</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
