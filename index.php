@@ -1,5 +1,15 @@
 <?php
 require_once __DIR__ . '/functions.php';
+
+// Inline-Delete (Admin-Session erforderlich)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+    if (!rl_session_auth()) { http_response_code(403); exit('Nicht autorisiert.'); }
+    $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
+    rl_delete_robot($id);
+    header('Location: index.php'); exit;
+}
+
+$isAdmin = rl_session_auth();
 $robots = array_values(rl_load_robots());
 // Sort by name
 usort($robots, fn($a, $b) => strcmp($a['name'], $b['name']));
@@ -319,7 +329,15 @@ header {
   transition: background 0.15s;
 }
 
-.btn-load:hover {
+.btn-delete {
+  display: block; width: 100%; margin-top: 6px;
+  padding: 9px; background: rgba(204,34,0,.2);
+  color: #ff6040; border: 1px solid rgba(204,34,0,.4);
+  border-radius: 4px; font-family: var(--mono); font-size: 12px;
+  letter-spacing: .06em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s;
+}
+.btn-delete:hover { background: rgba(204,34,0,.5); }
   background: #ff7a20;
 }
 
@@ -367,12 +385,17 @@ footer a { color: var(--orange); text-decoration: none; }
     </div>
     <nav class="header-nav">
       <a href="index.php" class="active">BIBLIOTHEK</a>
-      <a href="https://cnc-technik.de/robmodel/" target="_blank">ROBMODEL</a>
+      <a href="https://cnc-technik.de/robsimul/robmodel/" target="_blank">ROBMODEL</a>
       <a href="https://cnc-technik.de/robsimul/" target="_blank">ROBSIMUL</a>
     </nav>
   </div>
   <div class="header-right">
-    <a href="manage.php">▲ UPLOAD</a>
+    <?php if ($isAdmin): ?>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">● ADMIN</span>
+      <a href="manage.php?logout=1">Abmelden</a>
+    <?php else: ?>
+      <a href="manage.php">▲ UPLOAD</a>
+    <?php endif; ?>
   </div>
 </header>
 
@@ -464,6 +487,13 @@ footer a { color: var(--orange); text-decoration: none; }
         <a class="btn-load" href="<?= htmlspecialchars($zip) ?>" download>▼ ZIP LADEN</a>
       <?php else: ?>
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
+      <?php endif; ?>
+      <?php if ($isAdmin): ?>
+        <form method="post" onsubmit="return confirm('Roboter «<?= $name ?>» löschen?')">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="<?= htmlspecialchars($r['id']) ?>">
+          <button type="submit" class="btn-delete">✕ Löschen</button>
+        </form>
       <?php endif; ?>
     </div>
   </div>
