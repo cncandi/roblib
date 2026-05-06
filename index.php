@@ -329,15 +329,7 @@ header {
   transition: background 0.15s;
 }
 
-.btn-delete {
-  display: block; width: 100%; margin-top: 6px;
-  padding: 9px; background: rgba(204,34,0,.2);
-  color: #ff6040; border: 1px solid rgba(204,34,0,.4);
-  border-radius: 4px; font-family: var(--mono); font-size: 12px;
-  letter-spacing: .06em; text-transform: uppercase;
-  cursor: pointer; transition: background .15s;
-}
-.btn-delete:hover { background: rgba(204,34,0,.5); }
+.btn-load:hover {
   background: #ff7a20;
 }
 
@@ -374,6 +366,15 @@ footer a { color: var(--orange); text-decoration: none; }
   .hero, .filter-bar, .grid { padding-left: 12px; padding-right: 12px; }
   .grid { grid-template-columns: 1fr; }
 }
+.btn-delete {
+  display: block; width: 100%; margin-top: 6px;
+  padding: 9px; background: rgba(204,34,0,.2);
+  color: #ff6040; border: 1px solid rgba(204,34,0,.4);
+  border-radius: 4px; font-family: var(--mono); font-size: 12px;
+  letter-spacing: .06em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s;
+}
+.btn-delete:hover { background: rgba(204,34,0,.5); }
 </style>
 </head>
 <body>
