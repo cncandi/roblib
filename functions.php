@@ -86,6 +86,33 @@ function rl_add_robot(array $meta, string $zip_tmp, ?string $thumb_tmp): array|f
     return $robot;
 }
 
+
+function rl_update_robot(string $id, array $meta, ?string $thumb_tmp): array|false {
+    $robots = rl_load_robots();
+    if (!isset($robots[$id])) return false;
+
+    $fields = ['name','marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm','beschreibung'];
+    foreach ($fields as $k) {
+        if (isset($meta[$k]) && trim($meta[$k]) !== '') {
+            $robots[$id][$k] = in_array($k,['achsen']) ? intval($meta[$k])
+                : (in_array($k,['nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm']) ? floatval($meta[$k])
+                : trim($meta[$k]));
+        }
+    }
+
+    if ($thumb_tmp) {
+        // Remove old thumb
+        foreach (['png','jpg','jpeg','gif','webp'] as $ext) {
+            @unlink(THUMBS_DIR . $id . '.' . $ext);
+        }
+        $thumb_dst = THUMBS_DIR . $id . '.png';
+        move_uploaded_file($thumb_tmp, $thumb_dst);
+        $robots[$id]['thumb_url'] = BASE_URL . 'thumbs/' . $id . '.png';
+    }
+
+    rl_save_robots($robots);
+    return $robots[$id];
+}
 function rl_delete_robot(string $id): bool {
     $robots = rl_load_robots();
     if (!isset($robots[$id])) return false;
