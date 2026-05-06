@@ -1,14 +1,6 @@
 <?php
 require_once __DIR__ . '/functions.php';
 
-// Inline-Delete (Admin-Session erforderlich)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    if (!rl_session_auth()) { http_response_code(403); exit('Nicht autorisiert.'); }
-    $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
-    rl_delete_robot($id);
-    header('Location: index.php'); exit;
-}
-
 $isAdmin = rl_session_auth();
 $robots = array_values(rl_load_robots());
 // Sort by name
@@ -490,11 +482,8 @@ footer a { color: var(--orange); text-decoration: none; }
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
       <?php endif; ?>
       <?php if ($isAdmin): ?>
-        <form method="post" onsubmit="return confirm('Roboter «<?= $name ?>» löschen?')">
-          <input type="hidden" name="action" value="delete">
-          <input type="hidden" name="id" value="<?= htmlspecialchars($r['id']) ?>">
-          <button type="submit" class="btn-delete">✕ Löschen</button>
-        </form>
+        <button class="btn-delete" onclick="deleteRobot('<?= $r['id'] ?>','<?= addslashes($name) ?>')">&#x2715; L&ouml;schen</button>
+      <?php endif; ?>
       <?php endif; ?>
     </div>
   </div>
@@ -535,6 +524,21 @@ search.addEventListener('input',  filterCards);
 fMarke.addEventListener('change', filterCards);
 fAchs.addEventListener('change',  filterCards);
 filterCards();
+
+async function deleteRobot(id, name) {
+  if (!confirm('Roboter «' + name + '» wirklich löschen?')) return;
+  const pass = prompt('Admin-Passwort:');
+  if (pass === null) return;
+  const fd = new FormData();
+  fd.append('action', 'delete');
+  fd.append('id', id);
+  fd.append('user', 'admin');
+  fd.append('pass', pass);
+  const res  = await fetch('api.php', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.ok) location.reload();
+  else alert('Fehler: ' + data.error);
+}
 </script>
 </body>
 </html>
