@@ -8,6 +8,7 @@
 //    GET  api.php?action=download&id=XXX  → ZIP-Datei herunterladen
 //    POST api.php?action=upload    → Roboter hochladen (auth: user+pass im POST)
 //    POST api.php?action=delete    → Roboter löschen  (auth: user+pass im POST)
+//    POST api.php?action=update    → Roboter bearbeiten (auth: user+pass im POST)
 // =============================================================
 require_once __DIR__ . '/functions.php';
 
@@ -96,6 +97,23 @@ case 'upload':
     if (!$robot) api_error(500, 'Speichern fehlgeschlagen. Prüfe Verzeichnis-Schreibrechte.');
 
     api_json(['ok' => true, 'robot' => $robot], 201);
+
+
+// ── UPDATE ──────────────────────────────────────────────────
+case 'update':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
+    api_require_auth();
+
+    $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
+    if (!$id) api_error(400, 'ID fehlt.');
+
+    $thumb_tmp = (!empty($_FILES['thumb']['tmp_name']) && $_FILES['thumb']['error'] === UPLOAD_ERR_OK)
+                 ? $_FILES['thumb']['tmp_name'] : null;
+
+    $robot = rl_update_robot($id, $_POST, $thumb_tmp);
+    if (!$robot) api_error(404, 'Roboter nicht gefunden.');
+
+    api_json(['ok' => true, 'robot' => $robot]);
 
 // ── DELETE ──────────────────────────────────────────────────
 case 'delete':
