@@ -482,7 +482,7 @@ footer a { color: var(--orange); text-decoration: none; }
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
       <?php endif; ?>
       <?php if ($isAdmin): ?>
-        <button class="btn-delete" onclick="deleteRobot('<?= $r['id'] ?>','<?= addslashes($name) ?>')">&#x2715; L&ouml;schen</button>
+        <button class="btn-delete" data-id="<?= $r['id'] ?>" data-name="<?= $name ?>" onclick="deleteRobot(this.dataset.id,this.dataset.name)">&#x2715; L&ouml;schen</button>
       <?php endif; ?>
       <?php endif; ?>
     </div>
