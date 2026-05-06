@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/functions.php';
-
 $isAdmin = rl_session_auth();
 $robots = array_values(rl_load_robots());
 // Sort by name
@@ -359,14 +358,13 @@ footer a { color: var(--orange); text-decoration: none; }
   .grid { grid-template-columns: 1fr; }
 }
 .btn-delete {
-  display: block; width: 100%; margin-top: 6px;
-  padding: 9px; background: rgba(204,34,0,.2);
-  color: #ff6040; border: 1px solid rgba(204,34,0,.4);
-  border-radius: 4px; font-family: var(--mono); font-size: 12px;
-  letter-spacing: .06em; text-transform: uppercase;
-  cursor: pointer; transition: background .15s;
+  display:block;width:100%;margin-top:6px;padding:9px;
+  background:rgba(204,34,0,.2);color:#ff6040;
+  border:1px solid rgba(204,34,0,.4);border-radius:4px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;transition:background .15s;
 }
-.btn-delete:hover { background: rgba(204,34,0,.5); }
+.btn-delete:hover{background:rgba(204,34,0,.5);}
 </style>
 </head>
 <body>
@@ -383,12 +381,7 @@ footer a { color: var(--orange); text-decoration: none; }
     </nav>
   </div>
   <div class="header-right">
-    <?php if ($isAdmin): ?>
-      <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">● ADMIN</span>
-      <a href="manage.php?logout=1">Abmelden</a>
-    <?php else: ?>
-      <a href="manage.php">▲ UPLOAD</a>
-    <?php endif; ?>
+    <a href="manage.php">▲ UPLOAD</a>
   </div>
 </header>
 
@@ -442,7 +435,7 @@ footer a { color: var(--orange); text-decoration: none; }
     $wg    = floatval($r['wiederholgenauigkeit_mm'] ?? 0);
   ?>
   <div class="card"
-       data-name="<?= htmlspecialchars($name, ENT_QUOTES) ?>"
+       data-name="<?= strtolower($name . ' ' . $marke . ' ' . $mod) ?>"
        data-marke="<?= strtolower(htmlspecialchars($r['marke'] ?? '')) ?>"
        data-achsen="<?= $achsen ?>">
 
@@ -481,10 +474,12 @@ footer a { color: var(--orange); text-decoration: none; }
       <?php else: ?>
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
       <?php endif; ?>
-      <?php if ($isAdmin): ?>
-        <button class="btn-delete" data-id="<?= htmlspecialchars($r['id'], ENT_QUOTES) ?>" data-name="<?= htmlspecialchars($name, ENT_QUOTES) ?>" onclick="deleteRobot(this.dataset.id,this.dataset.name)">&#x2715; L&ouml;schen</button>
-      <?php endif; ?>
-      <?php endif; ?>
+      <?php if($isAdmin):?>
+        <button class="btn-delete"
+          data-id="<?php echo htmlspecialchars($r['id'],ENT_QUOTES);?>"
+          data-name="<?php echo htmlspecialchars($r['name'],ENT_QUOTES);?>"
+          onclick="rlDelete(this)">&#x2715; L&ouml;schen</button>
+      <?php endif;?>
     </div>
   </div>
   <?php endforeach; ?>
@@ -525,19 +520,19 @@ fMarke.addEventListener('change', filterCards);
 fAchs.addEventListener('change',  filterCards);
 filterCards();
 
-async function deleteRobot(id, name) {
-  if (!confirm('Roboter «' + name + '» wirklich löschen?')) return;
-  const pass = prompt('Admin-Passwort:');
-  if (pass === null) return;
-  const fd = new FormData();
-  fd.append('action', 'delete');
-  fd.append('id', id);
-  fd.append('user', 'admin');
-  fd.append('pass', pass);
-  const res  = await fetch('api.php', { method: 'POST', body: fd });
-  const data = await res.json();
-  if (data.ok) location.reload();
-  else alert('Fehler: ' + data.error);
+function rlDelete(btn){
+  var name=btn.getAttribute('data-name');
+  var id=btn.getAttribute('data-id');
+  if(!confirm('Roboter '+name+' wirklich löschen?'))return;
+  var pass=prompt('Admin-Passwort:');
+  if(pass===null)return;
+  var fd=new FormData();
+  fd.append('action','delete');fd.append('id',id);
+  fd.append('user','admin');fd.append('pass',pass);
+  fetch('api.php',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.ok)location.reload();else alert('Fehler: '+d.error);})
+    .catch(function(e){alert('Fehler: '+e.message);});
 }
 </script>
 </body>
