@@ -442,7 +442,7 @@ footer a { color: var(--orange); text-decoration: none; }
     $wg    = floatval($r['wiederholgenauigkeit_mm'] ?? 0);
   ?>
   <div class="card"
-       data-name="<?= strtolower($name . ' ' . $marke . ' ' . $mod) ?>"
+       data-name="<?= htmlspecialchars($name, ENT_QUOTES) ?>"
        data-marke="<?= strtolower(htmlspecialchars($r['marke'] ?? '')) ?>"
        data-achsen="<?= $achsen ?>">
 
@@ -482,7 +482,7 @@ footer a { color: var(--orange); text-decoration: none; }
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
       <?php endif; ?>
       <?php if ($isAdmin): ?>
-        <button class="btn-delete" data-id="<?= $r['id'] ?>" data-name="<?= $name ?>" onclick="deleteRobot(this.dataset.id,this.dataset.name)">&#x2715; L&ouml;schen</button>
+        <button class="btn-delete" data-id="<?= htmlspecialchars($r['id'], ENT_QUOTES) ?>" data-name="<?= htmlspecialchars($name, ENT_QUOTES) ?>" onclick="deleteRobot(this.dataset.id,this.dataset.name)">&#x2715; L&ouml;schen</button>
       <?php endif; ?>
       <?php endif; ?>
     </div>
