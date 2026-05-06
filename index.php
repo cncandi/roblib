@@ -509,6 +509,18 @@ footer a { color: var(--orange); text-decoration: none; }
         <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
       <?php endif; ?>
       <?php if($isAdmin):?>
+        <button class="btn-edit"
+          data-id="<?php echo htmlspecialchars($r['id'],ENT_QUOTES);?>"
+          data-name="<?php echo htmlspecialchars($r['name'],ENT_QUOTES);?>"
+          data-marke="<?php echo htmlspecialchars($r['marke'],ENT_QUOTES);?>"
+          data-modell="<?php echo htmlspecialchars($r['modell'],ENT_QUOTES);?>"
+          data-achsen="<?php echo intval($r['achsen']);?>"
+          data-reichweite="<?php echo intval($r['reichweite_mm']);?>"
+          data-nutzlast="<?php echo floatval($r['nutzlast_kg']);?>"
+          data-gewicht="<?php echo floatval($r['gewicht_kg']);?>"
+          data-wdh="<?php echo floatval($r['wiederholgenauigkeit_mm']);?>"
+          data-thumb="<?php echo htmlspecialchars($r['thumb_url']??'',ENT_QUOTES);?>"
+          onclick="rlEdit(this)">&#x270E; Bearbeiten</button>
         <button class="btn-delete"
           data-id="<?php echo htmlspecialchars($r['id'],ENT_QUOTES);?>"
           data-name="<?php echo htmlspecialchars($r['name'],ENT_QUOTES);?>"
