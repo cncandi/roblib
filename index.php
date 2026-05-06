@@ -302,27 +302,7 @@ header {
   padding: 0 12px 12px;
 }
 
-.btn-load {
-  display: block;
-  width: 100%;
-  background: var(--orange);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 8px;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s;
-}
 
-.btn-load:hover {
-  background: #ff7a20;
-}
 
 /* ── EMPTY STATE ─────────────────────────────────────────── */
 .empty-state {
@@ -503,11 +483,7 @@ footer a { color: var(--orange); text-decoration: none; }
     </div>
 
     <div class="card-footer">
-      <?php if ($zip): ?>
-        <a class="btn-load" href="<?= htmlspecialchars($zip) ?>" download>▼ ZIP LADEN</a>
-      <?php else: ?>
-        <span class="btn-load" style="background:var(--bg3);color:var(--text-dim);cursor:default;">— KEINE DATEI —</span>
-      <?php endif; ?>
+
       <?php if($isAdmin):?>
         <button class="btn-edit"
           data-id="<?php echo htmlspecialchars($r['id'],ENT_QUOTES);?>"
