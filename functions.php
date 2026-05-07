@@ -142,3 +142,57 @@ function rl_thumb_url(string $id): string {
     }
     return '';
 }
+
+// ── Benutzerverwaltung ─────────────────────────────────────────
+define('USERS_FILE', __DIR__ . '/data/users.json');
+
+function rl_load_users(): array {
+    if (!file_exists(USERS_FILE)) return [];
+    return json_decode(file_get_contents(USERS_FILE), true) ?? [];
+}
+
+function rl_save_users(array $users): void {
+    file_put_contents(USERS_FILE, json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+}
+
+function rl_check_user_auth(string $user, string $pass): array|false {
+    // Admin always has full access
+    if (rl_check_auth($user, $pass)) return ['role' => 'admin', 'robots' => null];
+    foreach (rl_load_users() as $u) {
+        if ($u['username'] === $user && $u['password'] === $pass)
+            return ['role' => 'user', 'robots' => $u['robots'] ?? []];
+    }
+    return false;
+}
+
+function rl_add_user(array $data): array|false {
+    $users = rl_load_users();
+    foreach ($users as $u) { if ($u['username'] === $data['username']) return false; }
+    $user = ['id' => bin2hex(random_bytes(6)), 'username' => trim($data['username']),
+             'password' => $data['password'], 'robots' => $data['robots'] ?? []];
+    $users[] = $user;
+    rl_save_users($users);
+    return $user;
+}
+
+function rl_update_user(string $id, array $data): array|false {
+    $users = rl_load_users();
+    foreach ($users as &$u) {
+        if ($u['id'] === $id) {
+            if (isset($data['username'])) $u['username'] = trim($data['username']);
+            if (isset($data['password']) && $data['password'] !== '') $u['password'] = $data['password'];
+            if (isset($data['robots'])) $u['robots'] = $data['robots'];
+            rl_save_users($users);
+            return $u;
+        }
+    }
+    return false;
+}
+
+function rl_delete_user(string $id): bool {
+    $users = rl_load_users();
+    $new = array_values(array_filter($users, fn($u) => $u['id'] !== $id));
+    if (count($new) === count($users)) return false;
+    rl_save_users($new);
+    return true;
+}
