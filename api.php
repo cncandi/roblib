@@ -54,6 +54,16 @@ switch ($action) {
 case 'list':
     $robots = array_values(rl_load_robots());
     usort($robots, fn($a, $b) => strcmp($a['name'], $b['name']));
+    // Optional user auth filter
+    $u = $_POST['user'] ?? $_GET['user'] ?? '';
+    $p = $_POST['pass'] ?? $_GET['pass'] ?? '';
+    if ($u && $p) {
+        $auth = rl_check_user_auth($u, $p);
+        if (!$auth) api_error(401, 'Authentifizierung fehlgeschlagen.');
+        if ($auth['role'] !== 'admin' && is_array($auth['robots'])) {
+            $robots = array_values(array_filter($robots, fn($r) => in_array($r['id'], $auth['robots'])));
+        }
+    }
     api_json(['ok' => true, 'count' => count($robots), 'robots' => $robots]);
 
 // ── DOWNLOAD ────────────────────────────────────────────────
@@ -124,6 +134,49 @@ case 'delete':
     if (!$id) api_error(400, 'ID fehlt.');
 
     if (!rl_delete_robot($id)) api_error(404, 'Roboter nicht gefunden.');
+    api_json(['ok' => true, 'deleted' => $id]);
+
+
+// ── LIST_USERS ──────────────────────────────────────────────
+case 'list_users':
+    api_require_auth();
+    $users = rl_load_users();
+    // Strip passwords from response
+    $safe = array_map(fn($u) => ['id'=>$u['id'],'username'=>$u['username'],'robots'=>$u['robots']??[]], $users);
+    api_json(['ok' => true, 'users' => array_values($safe)]);
+
+// ── ADD_USER ─────────────────────────────────────────────────
+case 'add_user':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
+    api_require_auth();
+    if (!trim($_POST['username'] ?? '')) api_error(400, 'Benutzername fehlt.');
+    if (!trim($_POST['password'] ?? '')) api_error(400, 'Passwort fehlt.');
+    $robots = json_decode($_POST['robots'] ?? '[]', true) ?: [];
+    $user = rl_add_user(['username'=>$_POST['username'],'password'=>$_POST['password'],'robots'=>$robots]);
+    if (!$user) api_error(409, 'Benutzername bereits vergeben.');
+    api_json(['ok' => true, 'user' => ['id'=>$user['id'],'username'=>$user['username'],'robots'=>$user['robots']]], 201);
+
+// ── UPDATE_USER ──────────────────────────────────────────────
+case 'update_user':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
+    api_require_auth();
+    $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
+    if (!$id) api_error(400, 'ID fehlt.');
+    $robots = json_decode($_POST['robots'] ?? '[]', true) ?: [];
+    $data = ['robots' => $robots];
+    if (!empty($_POST['username'])) $data['username'] = $_POST['username'];
+    if (!empty($_POST['password'])) $data['password'] = $_POST['password'];
+    $user = rl_update_user($id, $data);
+    if (!$user) api_error(404, 'Benutzer nicht gefunden.');
+    api_json(['ok' => true, 'user' => ['id'=>$user['id'],'username'=>$user['username'],'robots'=>$user['robots']]]);
+
+// ── DELETE_USER ──────────────────────────────────────────────
+case 'delete_user':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
+    api_require_auth();
+    $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
+    if (!$id) api_error(400, 'ID fehlt.');
+    if (!rl_delete_user($id)) api_error(404, 'Benutzer nicht gefunden.');
     api_json(['ok' => true, 'deleted' => $id]);
 
 // ── UNKNOWN ─────────────────────────────────────────────────
