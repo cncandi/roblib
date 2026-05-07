@@ -811,8 +811,12 @@ function renderUsers(users) {
   if (!users.length) { tbody.innerHTML='<tr><td colspan="3" style="color:#6a8fa8">Keine Benutzer.</td></tr>'; return; }
   tbody.innerHTML = users.map(function(u) {
     var rCount = (u.robots||[]).length;
-    return '<tr><td>'+u.username+'</td><td style="color:#6a8fa8">'+rCount+' Roboter</td><td><button class="btn-sm btn-sm-edit" onclick="openEditUser('+JSON.stringify(u)+')">&#x270E;</button> '+
-      '<button class="btn-sm btn-sm-del" onclick="deleteUser(''+u.id+'',''+u.username+'')">&#x2715;</button></td></tr>';
+    var safeId   = (u.id||'').replace(/"/g,'');
+    var safeName = (u.username||'').replace(/"/g,'');
+    return '<tr><td>'+safeName+'</td><td style="color:#6a8fa8">'+rCount+' Roboter</td><td style="white-space:nowrap">' +
+      '<button class="btn-sm btn-sm-edit" data-u="'+encodeURIComponent(JSON.stringify(u))+'" onclick="openEditUser(JSON.parse(decodeURIComponent(this.dataset.u)))">&#x270E;</button> ' +
+      '<button class="btn-sm btn-sm-del" data-id="'+safeId+'" data-name="'+safeName+'" onclick="deleteUser(this.dataset.id,this.dataset.name)">&#x2715;</button>' +
+      '</td></tr>';
   }).join('');
 }
 
