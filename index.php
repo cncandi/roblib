@@ -857,7 +857,7 @@ function saveUser() {
   var msg = document.getElementById('um-msg');
   var robots = Array.from(document.querySelectorAll('#um-robots input:checked')).map(function(c){return c.value;});
   var fd = new FormData();
-  fd.append('user','admin'); fd.append('pass',pass);
+  fd.append('session','1');
   fd.append('username', document.getElementById('um-user').value);
   var pw = document.getElementById('um-pass').value;
   if (pw) fd.append('password', pw);
@@ -869,7 +869,7 @@ function saveUser() {
     if (!pw) { msg.textContent='Passwort erforderlich.'; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; return; }
   }
   btn.disabled=true; btn.textContent='Speichern...';
-  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
+  fetch('api.php',{method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
     btn.disabled=false; btn.textContent='SPEICHERN';
     if (d.ok) { document.getElementById('userModal').style.display='none'; loadUsers(); }
     else { msg.textContent='Fehler: '+d.error; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; }
