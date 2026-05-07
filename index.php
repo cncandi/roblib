@@ -423,6 +423,10 @@ footer a { color: var(--orange); text-decoration: none; }
   <div class="header-right">
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
+      <button onclick="switchTab('users');window.scrollTo(0,document.getElementById('tab-users').offsetTop-80)"
+        style="background:none;border:1px solid rgba(255,96,0,.4);color:var(--orange);font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;cursor:pointer;margin-right:8px;letter-spacing:.06em">
+        BENUTZER
+      </button>
       <a href="?logout=1" style="color:var(--orange)">Abmelden</a>
     <?php else: ?>
       <button onclick="document.getElementById('loginModal').style.display='flex'"
