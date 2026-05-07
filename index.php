@@ -388,6 +388,23 @@ footer a { color: var(--orange); text-decoration: none; }
   text-transform:uppercase;cursor:pointer;transition:background .15s;
 }
 .btn-delete:hover{background:rgba(204,34,0,.5);}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid rgba(255,96,0,.3);margin-bottom:24px}
+.tab-btn{font-family:var(--mono);font-size:12px;padding:8px 18px;background:none;border:none;
+  color:#6a8fa8;cursor:pointer;letter-spacing:.06em;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-btn.active{color:var(--orange);border-bottom-color:var(--orange)}
+.tab-content{display:none}.tab-content.active{display:block}
+.usr-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+.usr-table th{color:#6a8fa8;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08);letter-spacing:.06em}
+.usr-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:#d8e8f0;vertical-align:middle}
+.usr-table tr:hover td{background:rgba(255,255,255,.03)}
+.btn-sm{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid}
+.btn-sm-edit{background:rgba(37,99,235,.2);color:#60a5fa;border-color:rgba(37,99,235,.4)}
+.btn-sm-del{background:rgba(204,34,0,.2);color:#ff6040;border-color:rgba(204,34,0,.4)}
+.btn-sm-add{background:rgba(255,96,0,.15);color:var(--orange);border-color:rgba(255,96,0,.4);padding:5px 14px}
+.robot-check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;max-height:200px;overflow-y:auto;padding:4px}
+.robot-check-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:#d8e8f0;
+  background:#0f2030;padding:5px 8px;border-radius:4px;cursor:pointer}
+.robot-check-item input{accent-color:var(--orange)}
 </style>
 </head>
 <body>
@@ -524,6 +541,20 @@ footer a { color: var(--orange); text-decoration: none; }
   <?php endforeach; ?>
 <?php endif; ?>
 </div>
+</div><!-- tab-robots -->
+
+<?php if ($isAdmin): ?>
+<div id="tab-users" class="tab-content" style="max-width:1100px;margin:0 auto;padding:0 20px 40px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <span style="font-family:var(--mono);font-size:13px;color:var(--orange)">BENUTZERVERWALTUNG</span>
+    <button class="btn-sm btn-sm-add" onclick="openAddUser()">+ BENUTZER</button>
+  </div>
+  <table class="usr-table" id="usrTable">
+    <thead><tr><th>BENUTZER</th><th>ROBOTER</th><th>AKTIONEN</th></tr></thead>
+    <tbody id="usrBody"><tr><td colspan="3" style="color:#6a8fa8">Lade…</td></tr></tbody>
+  </table>
+</div>
+<?php endif; ?>
 
 <footer>
   ROBLIB · <a href="manage.php">Upload / Verwaltung</a> · 
@@ -680,5 +711,147 @@ function rlSave() {
     </form>
   </div>
 </div>
+
+<!-- User Modal -->
+<div id="userModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0d1a26;border:1px solid var(--orange);border-radius:8px;width:min(560px,95vw);max-height:88vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,96,0,.3)">
+      <span id="userModalTitle" style="font-family:var(--mono);font-size:13px;color:var(--orange)">BENUTZER</span>
+      <button onclick="document.getElementById('userModal').style.display='none'" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&#x2715;</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <label style="font-family:var(--mono);font-size:11px;color:#6a8fa8;display:flex;flex-direction:column;gap:4px">
+          BENUTZER *<input id="um-user" type="text" style="background:#0f2030;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px 8px;color:#d8e8f0;font-family:var(--mono);font-size:12px;outline:none">
+        </label>
+        <label style="font-family:var(--mono);font-size:11px;color:#6a8fa8;display:flex;flex-direction:column;gap:4px">
+          PASSWORT<input id="um-pass" type="password" placeholder="leer = unverändert" style="background:#0f2030;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px 8px;color:#d8e8f0;font-family:var(--mono);font-size:12px;outline:none">
+        </label>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:#6a8fa8;margin-bottom:8px;letter-spacing:.06em">ROBOTER-ZUGANG</div>
+      <div id="um-robots" class="robot-check-grid"></div>
+      <div id="um-msg" style="display:none;margin-top:12px;padding:8px;border-radius:4px;font-family:var(--mono);font-size:12px"></div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08)">
+      <button id="um-save" onclick="saveUser()" style="width:100%;padding:9px;background:var(--orange);color:#000;border:none;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.06em">SPEICHERN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _adminPass = null;
+var _editUserId = null;
+var _allRobots = [];
+
+function switchTab(tab) {
+  ['robots','users'].forEach(function(t) {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.querySelectorAll('.tab-btn').forEach(function(b,i) {
+      b.classList.toggle('active', (i===0&&tab==='robots')||(i===1&&tab==='users'));
+    });
+  });
+  if (tab === 'users') loadUsers();
+}
+
+function getAdminPass() {
+  if (_adminPass) return _adminPass;
+  _adminPass = prompt('Admin-Passwort:');
+  return _adminPass;
+}
+
+function loadUsers() {
+  var pass = getAdminPass();
+  if (!pass) return;
+  var fd = new FormData();
+  fd.append('action','list_users'); fd.append('user','admin'); fd.append('pass',pass);
+  fetch('api.php', {method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
+    if (!d.ok) { _adminPass=null; document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+d.error+'</td></tr>'; return; }
+    // Also load robots for modal
+    fetch('api.php?action=list').then(r=>r.json()).then(function(rd) {
+      _allRobots = rd.robots || [];
+    });
+    renderUsers(d.users);
+  });
+}
+
+function renderUsers(users) {
+  var tbody = document.getElementById('usrBody');
+  if (!users.length) { tbody.innerHTML='<tr><td colspan="3" style="color:#6a8fa8">Keine Benutzer.</td></tr>'; return; }
+  tbody.innerHTML = users.map(function(u) {
+    var rCount = (u.robots||[]).length;
+    return '<tr><td>'+u.username+'</td><td style="color:#6a8fa8">'+rCount+' Roboter</td><td><button class="btn-sm btn-sm-edit" onclick="openEditUser('+JSON.stringify(u)+')">&#x270E;</button> '+
+      '<button class="btn-sm btn-sm-del" onclick="deleteUser(''+u.id+'',''+u.username+'')">&#x2715;</button></td></tr>';
+  }).join('');
+}
+
+function openAddUser() {
+  _editUserId = null;
+  document.getElementById('userModalTitle').textContent = 'BENUTZER HINZUFÜGEN';
+  document.getElementById('um-user').value = '';
+  document.getElementById('um-pass').value = '';
+  document.getElementById('um-msg').style.display = 'none';
+  buildRobotChecks([]);
+  document.getElementById('userModal').style.display = 'flex';
+}
+
+function openEditUser(u) {
+  _editUserId = u.id;
+  document.getElementById('userModalTitle').textContent = 'BENUTZER BEARBEITEN';
+  document.getElementById('um-user').value = u.username;
+  document.getElementById('um-pass').value = '';
+  document.getElementById('um-msg').style.display = 'none';
+  buildRobotChecks(u.robots || []);
+  document.getElementById('userModal').style.display = 'flex';
+}
+
+function buildRobotChecks(selected) {
+  var grid = document.getElementById('um-robots');
+  if (!_allRobots.length) {
+    grid.innerHTML = '<span style="color:#6a8fa8;font-family:var(--mono);font-size:11px">Keine Roboter vorhanden.</span>';
+    return;
+  }
+  grid.innerHTML = _allRobots.map(function(r) {
+    var checked = selected.indexOf(r.id) >= 0 ? 'checked' : '';
+    return '<label class="robot-check-item"><input type="checkbox" value="'+r.id+'" '+checked+'> '+r.name+'</label>';
+  }).join('');
+}
+
+function saveUser() {
+  var pass = getAdminPass(); if (!pass) return;
+  var btn = document.getElementById('um-save');
+  var msg = document.getElementById('um-msg');
+  var robots = Array.from(document.querySelectorAll('#um-robots input:checked')).map(function(c){return c.value;});
+  var fd = new FormData();
+  fd.append('user','admin'); fd.append('pass',pass);
+  fd.append('username', document.getElementById('um-user').value);
+  var pw = document.getElementById('um-pass').value;
+  if (pw) fd.append('password', pw);
+  fd.append('robots', JSON.stringify(robots));
+  if (_editUserId) {
+    fd.append('action','update_user'); fd.append('id',_editUserId);
+  } else {
+    fd.append('action','add_user');
+    if (!pw) { msg.textContent='Passwort erforderlich.'; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; return; }
+  }
+  btn.disabled=true; btn.textContent='Speichern...';
+  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
+    btn.disabled=false; btn.textContent='SPEICHERN';
+    if (d.ok) { document.getElementById('userModal').style.display='none'; loadUsers(); }
+    else { msg.textContent='Fehler: '+d.error; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; }
+  });
+}
+
+function deleteUser(id, name) {
+  var pass = getAdminPass(); if (!pass) return;
+  if (!confirm('Benutzer «'+name+'» löschen?')) return;
+  var fd = new FormData();
+  fd.append('action','delete_user'); fd.append('id',id);
+  fd.append('user','admin'); fd.append('pass',pass);
+  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
+    if (d.ok) loadUsers();
+    else alert('Fehler: '+d.error);
+  });
+}
+</script>
 </body>
 </html>
