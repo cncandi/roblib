@@ -405,6 +405,16 @@ footer a { color: var(--orange); text-decoration: none; }
 .robot-check-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:#d8e8f0;
   background:#0f2030;padding:5px 8px;border-radius:4px;cursor:pointer}
 .robot-check-item input{accent-color:var(--orange)}
+/* ── Thumb Zoom ──────────────────────────────────────────── */
+#thumbZoom {
+  display:none;position:fixed;z-index:9000;pointer-events:none;
+  border:1px solid rgba(255,96,0,.5);border-radius:8px;overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.8);
+  transition:opacity .15s;
+}
+#thumbZoom img {
+  display:block;width:420px;height:420px;object-fit:contain;background:#060e14;
+}
 </style>
 </head>
 <body>
@@ -856,6 +866,39 @@ function deleteUser(id, name) {
     else alert('Fehler: '+d.error);
   });
 }
+</script>
+
+<div id="thumbZoom"><img id="thumbZoomImg" src="" alt=""></div>
+
+<script>
+(function(){
+  var zoomEl  = document.getElementById('thumbZoom');
+  var zoomImg = document.getElementById('thumbZoomImg');
+  var margin  = 16;
+
+  document.querySelectorAll('.card-thumb img').forEach(function(img) {
+    img.addEventListener('mouseenter', function(e) {
+      zoomImg.src = img.src;
+      zoomEl.style.display = 'block';
+      positionZoom(e);
+    });
+    img.addEventListener('mousemove', positionZoom);
+    img.addEventListener('mouseleave', function() {
+      zoomEl.style.display = 'none';
+    });
+  });
+
+  function positionZoom(e) {
+    var w = 420, h = 420;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var x = e.clientX + margin;
+    var y = e.clientY + margin;
+    if (x + w > vw) x = e.clientX - w - margin;
+    if (y + h > vh) y = e.clientY - h - margin;
+    zoomEl.style.left = x + 'px';
+    zoomEl.style.top  = y + 'px';
+  }
+})();
 </script>
 </body>
 </html>
