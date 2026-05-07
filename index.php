@@ -634,7 +634,7 @@ function rlSave() {
   btn.disabled = true; btn.textContent = 'Speichern...';
   var fd = new FormData();
   fd.append('action','update'); fd.append('id',_rlId);
-  fd.append('user','admin');    fd.append('pass',pass);
+  fd.append('session','1');
   fd.append('name',   document.getElementById('rl-name').value);
   fd.append('marke',  document.getElementById('rl-marke').value);
   fd.append('modell', document.getElementById('rl-modell').value);
@@ -743,14 +743,40 @@ function rlSave() {
 </div>
 
 <script>
-var _adminPass = null;
+var _adminUser = '';
+var _adminPass = '';
 
+function doLogin() {
+  var u = document.getElementById('li-user').value.trim();
+  var p = document.getElementById('li-pass').value;
+  if (!u || !p) return;
+  var btn = document.getElementById('li-btn');
+  btn.disabled = true; btn.textContent = '…';
+  var fd = new FormData();
+  fd.append('action','list'); fd.append('user',u); fd.append('pass',p);
+  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d){
+    btn.disabled=false; btn.textContent='ANMELDEN';
+    if(d.ok){
+      _adminUser=u; _adminPass=p;
+      document.getElementById('loginModal').style.display='none';
+      document.getElementById('loginErr').style.display='none';
+      location.reload();
+    } else {
+      document.getElementById('loginErr').style.display='block';
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent='ANMELDEN';
+    document.getElementById('loginErr').style.display='block';
+  });
+}
+
+<?php if($isAdmin): ?>
+// Admin already authenticated via PHP session
 function openUserManager() {
-  var pass = getAdminPass();
-  if (!pass) return;
   document.getElementById('userMgrOverlay').style.display = 'flex';
   loadUsers();
 }
+<?php endif; ?>
 
 var _editUserId = null;
 var _allRobots = [];
@@ -772,17 +798,14 @@ function getAdminPass() {
 }
 
 function loadUsers() {
-  var pass = getAdminPass();
-  if (!pass) return;
   var fd = new FormData();
-  fd.append('action','list_users'); fd.append('user','admin'); fd.append('pass',pass);
-  fetch('api.php', {method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
-    if (!d.ok) { _adminPass=null; document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+d.error+'</td></tr>'; return; }
-    // Also load robots for modal
-    fetch('api.php?action=list').then(r=>r.json()).then(function(rd) {
-      _allRobots = rd.robots || [];
-    });
+  fd.append('action','list_users'); fd.append('session','1');
+  fetch('api.php', {method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
+    if (!d.ok) { document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+d.error+'</td></tr>'; return; }
+    fetch('api.php?action=list').then(r=>r.json()).then(function(rd) { _allRobots = rd.robots || []; });
     renderUsers(d.users);
+  }).catch(function(e){
+    document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+e.message+'</td></tr>';
   });
 }
 
@@ -829,7 +852,6 @@ function buildRobotChecks(selected) {
 }
 
 function saveUser() {
-  var pass = getAdminPass(); if (!pass) return;
   var btn = document.getElementById('um-save');
   var msg = document.getElementById('um-msg');
   var robots = Array.from(document.querySelectorAll('#um-robots input:checked')).map(function(c){return c.value;});
@@ -854,11 +876,9 @@ function saveUser() {
 }
 
 function deleteUser(id, name) {
-  var pass = getAdminPass(); if (!pass) return;
   if (!confirm('Benutzer «'+name+'» löschen?')) return;
   var fd = new FormData();
-  fd.append('action','delete_user'); fd.append('id',id);
-  fd.append('user','admin'); fd.append('pass',pass);
+  fd.append('action','delete_user'); fd.append('id',id); fd.append('session','1');
   fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
     if (d.ok) loadUsers();
     else alert('Fehler: '+d.error);
