@@ -943,26 +943,19 @@ function deleteUser(id, name) {
 <script>
 (function(){
   var themes = [
-    { name:'dark',   icon:'🌙', vars:{
-      '--bg':'#09131c','--bg2':'#0d1a26','--bg3':'#0f2030',
-      '--card':'#0d1e2e','--card-hover':'#112435',
-      '--border':'#1a3348','--text':'#d8e8f0','--text-dim':'#6a8fa8','--text-bright':'#ffffff'
-    }},
-    { name:'light',  icon:'☀️', vars:{
-      '--bg':'#f0f4f8','--bg2':'#e2eaf2','--bg3':'#d4e0ec',
-      '--card':'#e8f0f8','--card-hover':'#dce8f4',
-      '--border':'#b0c8dc','--text':'#1a2a3a','--text-dim':'#4a6a8a','--text-bright':'#000000'
-    }},
-    { name:'steel',  icon:'⚙️', vars:{
-      '--bg':'#141820','--bg2':'#1c2430','--bg3':'#222c3c',
-      '--card':'#1a2230','--card-hover':'#1e2a3a',
-      '--border':'#2a3a50','--text':'#c8d8e8','--text-dim':'#5a7a9a','--text-bright':'#ffffff'
-    }},
+    { name:'dark',       icon:'🌑', vars:{'--bg':'#09131c','--bg2':'#0d1a26','--bg3':'#0f2030','--card':'#0d1e2e','--card-hover':'#112435','--border':'#1a3348','--text':'#d8e8f0','--text-dim':'#6a8fa8','--text-bright':'#ffffff'}},
+    { name:'bg-pro',     icon:'💻', vars:{'--bg':'#1e1e1e','--bg2':'#252526','--bg3':'#2d2d30','--card':'#252526','--card-hover':'#2a2a2c','--border':'#3e3e42','--text':'#d4d4d4','--text-dim':'#808080','--text-bright':'#ffffff'}},
+    { name:'bg-white',   icon:'☀️', vars:{'--bg':'#f5f5f0','--bg2':'#eaeae5','--bg3':'#ddddd8','--card':'#eaeae5','--card-hover':'#e0e0da','--border':'#b8b8b2','--text':'#1a2a3a','--text-dim':'#4a6a8a','--text-bright':'#000000'}},
+    { name:'bg-minimal', icon:'◻️', vars:{'--bg':'#f4f4f4','--bg2':'#ebebeb','--bg3':'#e0e0e0','--card':'#ebebeb','--card-hover':'#e4e4e4','--border':'#b0b0b0','--text':'#111111','--text-dim':'#666666','--text-bright':'#000000'}},
+    { name:'bg-win11',   icon:'🪟', vars:{'--bg':'#f3f6fc','--bg2':'#e8eef8','--bg3':'#dde5f4','--card':'#e8eef8','--card-hover':'#dce5f2','--border':'#c8d8e8','--text':'#1a2a3a','--text-dim':'#4a6a8a','--text-bright':'#000000'}},
+    { name:'bg-deep',    icon:'🌌', vars:{'--bg':'#000408','--bg2':'#040c14','--bg3':'#081420','--card':'#040c14','--card-hover':'#081420','--border':'#0a2030','--text':'#a0c8e0','--text-dim':'#3a6080','--text-bright':'#ffffff'}},
+    { name:'bg-vivid',   icon:'🟣', vars:{'--bg':'#1a0a2e','--bg2':'#22103c','--bg3':'#2a1848','--card':'#22103c','--card-hover':'#2a1848','--border':'#3a2060','--text':'#e0c8f8','--text-dim':'#8060a0','--text-bright':'#ffffff'}},
+    { name:'bg-matrix',  icon:'💚', vars:{'--bg':'#000800','--bg2':'#001400','--bg3':'#001c00','--card':'#001400','--card-hover':'#001c00','--border':'#003000','--text':'#00dd44','--text-dim':'#006622','--text-bright':'#00ff66'}},
   ];
   var idx = parseInt(localStorage.getItem('rl-theme')||'0');
   function applyTheme(i) {
     var t = themes[i];
-    var s = Object.entries(t.vars).map(function(e){return 'body{'+e[0]+':'+e[1]+'}'}).join('');
+    var s = 'body{' + Object.entries(t.vars).map(function(e){return e[0]+':'+e[1]}).join(';') + '}';
     document.getElementById('rl-theme-style').textContent = s;
     var btn = document.getElementById('rlThemeBtn');
     if (btn) btn.textContent = themes[(i+1)%themes.length].icon;
