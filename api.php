@@ -23,6 +23,9 @@ if (!$action) $action = 'list';
 
 // ── Authentifizierung für schreibende Operationen ───────────
 function api_require_auth(): void {
+    // Session auth (same-origin requests from index.php)
+    if (!empty($_POST['session']) && rl_session_auth()) return;
+
     // HTTP Basic Auth
     $u = $_SERVER['PHP_AUTH_USER'] ?? '';
     $p = $_SERVER['PHP_AUTH_PW']   ?? '';
