@@ -433,7 +433,7 @@ footer a { color: var(--orange); text-decoration: none; }
   <div class="header-right">
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
-      <button onclick="switchTab('users');window.scrollTo(0,document.getElementById('tab-users').offsetTop-80)"
+      <button onclick="openUserManager()"
         style="background:none;border:1px solid rgba(255,96,0,.4);color:var(--orange);font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;cursor:pointer;margin-right:8px;letter-spacing:.06em">
         BENUTZER
       </button>
@@ -558,16 +558,6 @@ footer a { color: var(--orange); text-decoration: none; }
 </div><!-- tab-robots -->
 
 <?php if ($isAdmin): ?>
-<div id="tab-users" class="tab-content" style="max-width:1100px;margin:0 auto;padding:0 20px 40px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <span style="font-family:var(--mono);font-size:13px;color:var(--orange)">BENUTZERVERWALTUNG</span>
-    <button class="btn-sm btn-sm-add" onclick="openAddUser()">+ BENUTZER</button>
-  </div>
-  <table class="usr-table" id="usrTable">
-    <thead><tr><th>BENUTZER</th><th>ROBOTER</th><th>AKTIONEN</th></tr></thead>
-    <tbody id="usrBody"><tr><td colspan="3" style="color:#6a8fa8">Lade…</td></tr></tbody>
-  </table>
-</div>
 <?php endif; ?>
 
 <footer>
@@ -754,6 +744,14 @@ function rlSave() {
 
 <script>
 var _adminPass = null;
+
+function openUserManager() {
+  var pass = getAdminPass();
+  if (!pass) return;
+  document.getElementById('userMgrOverlay').style.display = 'flex';
+  loadUsers();
+}
+
 var _editUserId = null;
 var _allRobots = [];
 
@@ -900,5 +898,23 @@ function deleteUser(id, name) {
   }
 })();
 </script>
+
+<!-- User Manager Overlay -->
+<div id="userMgrOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px">
+  <div style="background:#0d1a26;border:1px solid rgba(255,96,0,.4);border-radius:8px;width:min(820px,100%);padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <span style="font-family:var(--mono);font-size:14px;color:var(--orange);letter-spacing:.06em">BENUTZERVERWALTUNG</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-sm btn-sm-add" onclick="openAddUser()">+ BENUTZER</button>
+        <button onclick="document.getElementById('userMgrOverlay').style.display='none'"
+          style="background:none;border:none;color:#6a8fa8;font-size:20px;cursor:pointer;line-height:1">&#x2715;</button>
+      </div>
+    </div>
+    <table class="usr-table" id="usrTable">
+      <thead><tr><th>BENUTZER</th><th>ROBOTER</th><th>AKTIONEN</th></tr></thead>
+      <tbody id="usrBody"><tr><td colspan="3" style="color:#6a8fa8">Lade…</td></tr></tbody>
+    </table>
+  </div>
+</div>
 </body>
 </html>
