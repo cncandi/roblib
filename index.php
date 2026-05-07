@@ -770,13 +770,10 @@ function doLogin() {
   });
 }
 
-<?php if($isAdmin): ?>
-// Admin already authenticated via PHP session
 function openUserManager() {
   document.getElementById('userMgrOverlay').style.display = 'flex';
   loadUsers();
 }
-<?php endif; ?>
 
 var _editUserId = null;
 var _allRobots = [];
