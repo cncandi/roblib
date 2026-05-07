@@ -1,5 +1,14 @@
 <?php
 require_once __DIR__ . '/functions.php';
+// Login / Logout
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
+    rl_session_login($_POST['user'] ?? '', $_POST['pass'] ?? '');
+    header('Location: index.php'); exit;
+}
+if (isset($_GET['logout'])) {
+    rl_session_logout();
+    header('Location: index.php'); exit;
+}
 $isAdmin = rl_session_auth();
 $robots = array_values(rl_load_robots());
 // Sort by name
@@ -395,7 +404,15 @@ footer a { color: var(--orange); text-decoration: none; }
     </nav>
   </div>
   <div class="header-right">
-    <a href="manage.php">▲ UPLOAD</a>
+    <?php if ($isAdmin): ?>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
+      <a href="?logout=1" style="color:var(--orange)">Abmelden</a>
+    <?php else: ?>
+      <button onclick="document.getElementById('loginModal').style.display='flex'"
+        style="background:none;border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;letter-spacing:.06em">
+        &#x25B2; ANMELDEN
+      </button>
+    <?php endif; ?>
   </div>
 </header>
 
@@ -637,6 +654,30 @@ function rlSave() {
       </div>
       <button class="rl-save" id="rlSave" onclick="rlSave()">Speichern</button>
     </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0d1a26;border:1px solid var(--orange);border-radius:8px;width:min(320px,92vw);padding:24px">
+    <div style="font-family:var(--mono);font-size:13px;color:var(--orange);margin-bottom:18px;letter-spacing:.06em">&#x25A0; ADMIN LOGIN</div>
+    <form method="post" style="display:flex;flex-direction:column;gap:12px">
+      <input type="hidden" name="action" value="login">
+      <input type="text" name="user" placeholder="Benutzer" autocomplete="username"
+        style="background:#0f2030;border:1px solid rgba(255,96,0,.4);border-radius:4px;padding:8px 10px;color:#d8e8f0;font-family:var(--mono);font-size:13px;outline:none">
+      <input type="password" name="pass" placeholder="Passwort" autocomplete="current-password"
+        style="background:#0f2030;border:1px solid rgba(255,96,0,.4);border-radius:4px;padding:8px 10px;color:#d8e8f0;font-family:var(--mono);font-size:13px;outline:none">
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="submit"
+          style="flex:1;padding:9px;background:var(--orange);color:#000;border:none;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.06em">
+          ANMELDEN
+        </button>
+        <button type="button" onclick="document.getElementById('loginModal').style.display='none'"
+          style="padding:9px 14px;background:none;border:1px solid rgba(255,255,255,.2);color:#6a8fa8;border-radius:4px;font-family:var(--mono);font-size:12px;cursor:pointer">
+          &#x2715;
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 </body>
