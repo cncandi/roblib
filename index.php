@@ -62,7 +62,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 48px;
+  height: 60px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -76,7 +76,7 @@ header {
 
 .logo {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 18px;
   color: var(--orange);
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -95,7 +95,7 @@ header {
 
 .header-nav a {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 22px;
   color: var(--text-dim);
   text-decoration: none;
   padding: 4px 10px;
@@ -422,7 +422,7 @@ footer a { color: var(--orange); text-decoration: none; }
 <header>
   <div class="header-left">
     <div class="logo">
-      ● ROBLIB<span>© CAD/CAM Systeme Datentechnik Reitz</span>
+      ⚙ ROBLIB<span>© CAD/CAM Systeme Datentechnik Reitz</span>
     </div>
     <nav class="header-nav">
       <a href="index.php" class="active">BIBLIOTHEK</a>
@@ -431,6 +431,7 @@ footer a { color: var(--orange); text-decoration: none; }
     </nav>
   </div>
   <div class="header-right">
+    <button id="rlThemeBtn" onclick="rlToggleTheme()" title="Theme wechseln" style="background:none;border:none;font-size:18px;cursor:pointer;margin-right:8px;padding:2px 6px">🌙</button>
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
       <button onclick="openUserManager()"
@@ -937,5 +938,40 @@ function deleteUser(id, name) {
     </table>
   </div>
 </div>
+
+<style id="rl-theme-style"></style>
+<script>
+(function(){
+  var themes = [
+    { name:'dark',   icon:'🌙', vars:{
+      '--bg':'#09131c','--bg2':'#0d1a26','--bg3':'#0f2030',
+      '--card':'#0d1e2e','--card-hover':'#112435',
+      '--border':'#1a3348','--text':'#d8e8f0','--text-dim':'#6a8fa8','--text-bright':'#ffffff'
+    }},
+    { name:'light',  icon:'☀️', vars:{
+      '--bg':'#f0f4f8','--bg2':'#e2eaf2','--bg3':'#d4e0ec',
+      '--card':'#e8f0f8','--card-hover':'#dce8f4',
+      '--border':'#b0c8dc','--text':'#1a2a3a','--text-dim':'#4a6a8a','--text-bright':'#000000'
+    }},
+    { name:'steel',  icon:'⚙️', vars:{
+      '--bg':'#141820','--bg2':'#1c2430','--bg3':'#222c3c',
+      '--card':'#1a2230','--card-hover':'#1e2a3a',
+      '--border':'#2a3a50','--text':'#c8d8e8','--text-dim':'#5a7a9a','--text-bright':'#ffffff'
+    }},
+  ];
+  var idx = parseInt(localStorage.getItem('rl-theme')||'0');
+  function applyTheme(i) {
+    var t = themes[i];
+    var s = Object.entries(t.vars).map(function(e){return 'body{'+e[0]+':'+e[1]+'}'}).join('');
+    document.getElementById('rl-theme-style').textContent = s;
+    var btn = document.getElementById('rlThemeBtn');
+    if (btn) btn.textContent = themes[(i+1)%themes.length].icon;
+    localStorage.setItem('rl-theme', i);
+    idx = i;
+  }
+  window.rlToggleTheme = function() { applyTheme((idx+1)%themes.length); };
+  document.addEventListener('DOMContentLoaded', function(){ applyTheme(idx); });
+})();
+</script>
 </body>
 </html>
