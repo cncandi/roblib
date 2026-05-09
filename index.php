@@ -617,16 +617,17 @@ function filterCards() {
 
 search.addEventListener('input',  filterCards);
 
-// Tab-System via Event-Delegation
+// Tab-System — direkte Listener pro Button
 var _currentType = 'robot';
-document.getElementById('typeTabs').addEventListener('click', function(e) {
-  var btn = e.target.closest('.type-tab');
-  if (!btn) return;
-  _currentType = btn.dataset.type;
-  document.querySelectorAll('.type-tab').forEach(function(b) {
-    b.classList.toggle('active', b === btn);
-  });
-  filterCards();
+document.querySelectorAll('#typeTabs .type-tab').forEach(function(btn) {
+  btn.style.cursor = 'pointer';
+  btn.onclick = function() {
+    _currentType = btn.dataset.type;
+    document.querySelectorAll('#typeTabs .type-tab').forEach(function(b) {
+      b.classList.toggle('active', b === btn);
+    });
+    filterCards();
+  };
 });
 fMarke.addEventListener('change', filterCards);
 fAchs.addEventListener('change',  filterCards);
