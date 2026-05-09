@@ -419,12 +419,13 @@ footer a { color: var(--orange); text-decoration: none; }
   display:block;width:420px;height:420px;object-fit:contain;background:#060e14;
 }
 .type-tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto 16px;padding:0 20px}
-.type-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.type-tab{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
 .type-tab.active{background:rgba(255,96,0,.15);border-color:var(--orange);color:var(--orange)}
 .type-tab:hover:not(.active){border-color:var(--orange);color:var(--text)}
 .type-cnt{display:inline-block;background:rgba(255,255,255,.1);border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px}
 .type-tab.active .type-cnt{background:rgba(255,96,0,.2)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -439,7 +440,12 @@ footer a { color: var(--orange); text-decoration: none; }
       <a href="https://cnc-technik.de/robsimul/" target="_blank">ROBSIMUL</a>
     </nav>
   </div>
-  <div class="header-right">
+  <div class="header-right" style="gap:6px">
+    <div id="typeTabs" style="display:flex;gap:4px;margin-right:8px">
+      <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
+      <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
+      <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
+    </div>
     <button id="rlThemeBtn" onclick="rlToggleTheme()" title="Theme wechseln" style="background:none;border:none;font-size:18px;cursor:pointer;margin-right:8px;padding:2px 6px">🌙</button>
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
@@ -465,12 +471,12 @@ footer a { color: var(--orange); text-decoration: none; }
   </p>
 </div>
 
-<div class="type-tabs" id="typeTabs">
-  <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
-  <button class="type-tab"        data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
-  <button class="type-tab"        data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
-</div>
+
 <div class="filter-bar">
+  <button id="btnNeu" onclick="rlOpenUploadModal()"
+    style="background:rgba(255,96,0,.15);border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:.06em;white-space:nowrap">
+    + NEU
+  </button>
   <input type="text" id="search" placeholder="Suchen… (Name, Marke, Modell)">
   
   <select id="filter-marke">
@@ -1003,6 +1009,156 @@ function deleteUser(id, name) {
   window.rlToggleTheme = function() { applyTheme((idx+1)%themes.length); };
   document.addEventListener('DOMContentLoaded', function(){ applyTheme(idx); });
 })();
+</script>
+
+<!-- ── Upload Modal ─────────────────────────────────────────────── -->
+<div id="uploadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:min(500px,96vw);padding:24px;font-family:var(--mono)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:14px;font-weight:700;color:var(--orange);letter-spacing:.1em">+ NEU HOCHLADEN</span>
+      <button onclick="document.getElementById('uploadModal').style.display='none'" style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <label style="grid-column:1/-1;font-size:10px;color:var(--text-dim);letter-spacing:.08em">TYP
+        <select id="um-type" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+          <option value="robot">🦾 Roboter (nur via RobModel)</option>
+          <option value="endeffektor">🔧 Endeffektor</option>
+          <option value="umfeld">🏭 Umfeld / Umgebung</option>
+        </select>
+      </label>
+      <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">NAME *
+        <input id="um-name" type="text" placeholder="Greifer 2F-85" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+      </label>
+      <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">MARKE
+        <input id="um-marke" type="text" placeholder="Robotiq" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+      </label>
+      <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">MODELL
+        <input id="um-modell" type="text" placeholder="2F-85" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+      </label>
+      <label style="grid-column:1/-1;font-size:10px;color:var(--text-dim);letter-spacing:.08em">STL-DATEI(EN)
+        <input id="um-stl" type="file" accept=".stl" multiple style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:11px">
+      </label>
+      <label style="grid-column:1/-1;font-size:10px;color:var(--text-dim);letter-spacing:.08em">THUMBNAIL (optional)
+        <input id="um-thumb" type="file" accept="image/*" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:11px">
+      </label>
+      <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">BENUTZER *
+        <input id="um-user" type="text" value="admin" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+      </label>
+      <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">PASSWORT *
+        <input id="um-pass" type="password" style="display:block;width:100%;margin-top:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--mono);font-size:12px">
+      </label>
+    </div>
+    <div id="um-progress" style="display:none;margin-bottom:10px">
+      <div style="background:rgba(255,255,255,.08);border-radius:4px;height:6px;overflow:hidden">
+        <div id="um-bar" style="height:100%;width:0%;background:#ff6000;border-radius:4px;transition:width .2s"></div>
+      </div>
+    </div>
+    <div id="um-msg" style="display:none;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:10px"></div>
+    <button id="um-submit" onclick="umDoUpload()"
+      style="width:100%;padding:10px;background:#ff6000;color:#fff;border:none;border-radius:5px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.06em">
+      HOCHLADEN
+    </button>
+  </div>
+</div>
+
+<script>
+function rlOpenUploadModal() {
+  var sel = document.getElementById('um-type');
+  if (sel) sel.value = _currentType === 'robot' ? 'endeffektor' : _currentType;
+  document.getElementById('um-msg').style.display = 'none';
+  document.getElementById('um-progress').style.display = 'none';
+  document.getElementById('uploadModal').style.display = 'flex';
+}
+
+async function umDoUpload() {
+  var btn  = document.getElementById('um-submit');
+  var msg  = document.getElementById('um-msg');
+  var prog = document.getElementById('um-progress');
+  var bar  = document.getElementById('um-bar');
+
+  var showMsg = function(txt, ok) {
+    msg.textContent = txt;
+    msg.style.cssText = 'display:block;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:10px;' +
+      (ok ? 'background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)'
+          : 'background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)');
+  };
+
+  var type   = document.getElementById('um-type').value;
+  var name   = document.getElementById('um-name').value.trim();
+  var marke  = document.getElementById('um-marke').value.trim();
+  var modell = document.getElementById('um-modell').value.trim();
+  var user   = document.getElementById('um-user').value.trim();
+  var pass   = document.getElementById('um-pass').value;
+  var stlFiles = document.getElementById('um-stl').files;
+
+  if (!name)  { showMsg('Name fehlt.', false); return; }
+  if (!user || !pass) { showMsg('Zugangsdaten fehlen.', false); return; }
+  if (!stlFiles.length) { showMsg('Mindestens eine STL-Datei erforderlich.', false); return; }
+
+  btn.disabled = true; btn.textContent = 'Lade...';
+  prog.style.display = 'block'; bar.style.width = '10%';
+
+  try {
+    // Create ZIP from STL files
+    var JSZip = window.JSZip;
+    if (!JSZip) throw new Error('JSZip nicht geladen');
+    var zip = new JSZip();
+    var json = { name: name, type: type, marke: marke, modell: modell };
+    if (type === 'endeffektor') {
+      for (var i = 0; i < stlFiles.length; i++) {
+        var fname = i === 0 ? 'endeffektor.stl' : 'endeffektor_' + (i+1) + '.stl';
+        zip.file(fname, await stlFiles[i].arrayBuffer());
+      }
+      json.endeffektor = { stl: 'endeffektor.stl' };
+    } else {
+      json.umfeld = [];
+      for (var i = 0; i < stlFiles.length; i++) {
+        var fname = 'umfeld_' + (i+1) + '.stl';
+        zip.file(fname, await stlFiles[i].arrayBuffer());
+        json.umfeld.push({ name: stlFiles[i].name, stl: fname, px:0, py:0, pz:0, rx:0, ry:0, rz:0 });
+      }
+    }
+    zip.file(name.replace(/\s+/g,'_').toLowerCase() + '.json', JSON.stringify(json, null, 2));
+    bar.style.width = '40%';
+
+    var zipBlob = await zip.generateAsync({ type: 'blob' });
+    bar.style.width = '60%';
+
+    var fd = new FormData();
+    fd.append('type', type); fd.append('name', name);
+    fd.append('marke', marke || '—'); fd.append('modell', modell || '—');
+    fd.append('achsen', '0'); fd.append('reichweite_mm', '0');
+    fd.append('nutzlast_kg', '0'); fd.append('gewicht_kg', '0');
+    fd.append('wiederholgenauigkeit_mm', '0');
+    fd.append('user', user); fd.append('pass', pass);
+    fd.append('zip', zipBlob, name + '.zip');
+    var thumb = document.getElementById('um-thumb').files[0];
+    if (thumb) fd.append('thumb', thumb, thumb.name);
+
+    var data = await new Promise(function(res, rej) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'api.php?action=upload');
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) bar.style.width = (60 + e.loaded/e.total*35) + '%';
+      };
+      xhr.onload = function() { try { res(JSON.parse(xhr.responseText)); } catch(e) { rej(e); } };
+      xhr.onerror = function() { rej(new Error('Verbindungsfehler')); };
+      xhr.send(fd);
+    });
+
+    if (data.ok) {
+      bar.style.width = '100%'; bar.style.background = '#22c55e';
+      showMsg('✓ Hochgeladen: ' + data.robot.name, true);
+      setTimeout(function() { location.reload(); }, 1200);
+    } else {
+      showMsg('Fehler: ' + data.error, false);
+    }
+  } catch(e) {
+    showMsg('Fehler: ' + e.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = 'HOCHLADEN';
+  }
+}
 </script>
 </body>
 </html>
