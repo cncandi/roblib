@@ -63,8 +63,14 @@ function rl_add_robot(array $meta, string $zip_tmp, ?string $thumb_tmp): array|f
         $thumb_url = BASE_URL . 'thumbs/' . $id . '.' . $ext;
     }
 
+    // Allowed types
+    $allowed_types = ['robot', 'endeffektor', 'umfeld'];
+    $type = trim($meta['type'] ?? 'robot');
+    if (!in_array($type, $allowed_types)) $type = 'robot';
+
     $robot = [
         'id'                 => $id,
+        'type'               => $type,
         'name'               => trim($meta['name']               ?? ''),
         'marke'              => trim($meta['marke']              ?? ''),
         'modell'             => trim($meta['modell']             ?? ''),
@@ -93,7 +99,7 @@ function rl_update_robot(string $id, array $meta, ?string $thumb_tmp): array|fal
     foreach ($robots as $i => $r) { if (($r['id'] ?? '') === $id) { $idx = $i; break; } }
     if ($idx === null) return false;
 
-    $fields = ['name','marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm','beschreibung'];
+    $fields = ['name','type','marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm','beschreibung'];
     foreach ($fields as $k) {
         if (isset($meta[$k]) && trim($meta[$k]) !== '') {
             $robots[$idx][$k] = in_array($k,['achsen']) ? intval($meta[$k])
