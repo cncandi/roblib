@@ -91,9 +91,15 @@ case 'upload':
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
     api_require_auth();
 
-    $required = ['name','marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm'];
-    foreach ($required as $k) {
-        if (trim($_POST[$k] ?? '') === '') api_error(400, "Feld '$k' fehlt.");
+    // name always required
+    if (trim($_POST['name'] ?? '') === '') api_error(400, "Feld 'name' fehlt.");
+    $type = trim($_POST['type'] ?? 'robot');
+    // Robot requires all kinematic fields
+    if ($type === 'robot') {
+        $required = ['marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm'];
+        foreach ($required as $k) {
+            if (trim($_POST[$k] ?? '') === '') api_error(400, "Feld '$k' fehlt.");
+        }
     }
 
     if (empty($_FILES['zip']['tmp_name']) || $_FILES['zip']['error'] !== UPLOAD_ERR_OK)
