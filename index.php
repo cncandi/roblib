@@ -465,10 +465,10 @@ footer a { color: var(--orange); text-decoration: none; }
   </p>
 </div>
 
-<div class="type-tabs">
-  <button class="type-tab active" data-type="robot"      onclick="switchType('robot')">🦾 Roboter <span class="type-cnt" id="cnt-robot"><?= count($robots_r) ?></span></button>
-  <button class="type-tab"        data-type="endeffektor" onclick="switchType('endeffektor')">🔧 Endeffektoren <span class="type-cnt" id="cnt-eff"><?= count($robots_eff) ?></span></button>
-  <button class="type-tab"        data-type="umfeld"      onclick="switchType('umfeld')">🏭 Umfeld <span class="type-cnt" id="cnt-umf"><?= count($robots_umf) ?></span></button>
+<div class="type-tabs" id="typeTabs">
+  <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
+  <button class="type-tab"        data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
+  <button class="type-tab"        data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
 </div>
 <div class="filter-bar">
   <input type="text" id="search" placeholder="Suchen… (Name, Marke, Modell)">
@@ -491,8 +491,12 @@ footer a { color: var(--orange); text-decoration: none; }
 </div>
 
 <div class="grid" id="grid">
+<div id="emptyState" class="empty-state" style="display:none;grid-column:1/-1">
+    <div class="icon">⬡</div>
+    Keine Einträge in dieser Kategorie.
+  </div>
 <?php if (empty($robots)): ?>
-  <div class="empty-state" data-type-empty="robot">
+  <div class="empty-state">
     <div class="icon">⬡</div>
     Noch keine Einträge in der Bibliothek.<br>
     <a href="manage.php" style="color:var(--orange)">Ersten Eintrag hochladen →</a>
@@ -606,19 +610,24 @@ function filterCards() {
     c.style.display = show ? '' : 'none';
     if (show) vis++;
   });
-  count.textContent = cards.length ? `${vis} / ${cards.length} angezeigt` : '';
+  count.textContent = vis + ' / ' + cards.length + ' angezeigt';
+  var empty = document.getElementById('emptyState');
+  if (empty) empty.style.display = vis === 0 ? '' : 'none';
 }
 
 search.addEventListener('input',  filterCards);
 
+// Tab-System via Event-Delegation
 var _currentType = 'robot';
-function switchType(type) {
-  _currentType = type;
+document.getElementById('typeTabs').addEventListener('click', function(e) {
+  var btn = e.target.closest('.type-tab');
+  if (!btn) return;
+  _currentType = btn.dataset.type;
   document.querySelectorAll('.type-tab').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.type === type);
+    b.classList.toggle('active', b === btn);
   });
   filterCards();
-}
+});
 fMarke.addEventListener('change', filterCards);
 fAchs.addEventListener('change',  filterCards);
 filterCards();
