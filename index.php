@@ -419,7 +419,7 @@ footer a { color: var(--orange); text-decoration: none; }
   display:block;width:420px;height:420px;object-fit:contain;background:#060e14;
 }
 .type-tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto 16px;padding:0 20px}
-.type-tab{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.type-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
 .type-tab.active{background:rgba(255,96,0,.15);border-color:var(--orange);color:var(--orange)}
 .type-tab:hover:not(.active){border-color:var(--orange);color:var(--text)}
 .type-cnt{display:inline-block;background:rgba(255,255,255,.1);border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px}
@@ -440,12 +440,7 @@ footer a { color: var(--orange); text-decoration: none; }
       <a href="https://cnc-technik.de/robsimul/" target="_blank">ROBSIMUL</a>
     </nav>
   </div>
-  <div class="header-right" style="gap:6px">
-    <div id="typeTabs" style="display:flex;gap:4px;margin-right:8px">
-      <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
-      <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
-      <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
-    </div>
+  <div class="header-right">
     <button id="rlThemeBtn" onclick="rlToggleTheme()" title="Theme wechseln" style="background:none;border:none;font-size:18px;cursor:pointer;margin-right:8px;padding:2px 6px">🌙</button>
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
@@ -472,6 +467,11 @@ footer a { color: var(--orange); text-decoration: none; }
 </div>
 
 
+<div id="typeTabs" style="display:flex;gap:6px;justify-content:flex-end;max-width:1100px;margin:0 auto 12px;padding:0 20px">
+  <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
+  <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
+  <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
+</div>
 <div class="filter-bar">
   <button id="btnNeu" onclick="rlOpenUploadModal()"
     style="background:rgba(255,96,0,.15);border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:.06em;white-space:nowrap">
