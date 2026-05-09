@@ -606,6 +606,15 @@ function filterCards() {
 }
 
 search.addEventListener('input',  filterCards);
+
+var _currentType = 'robot';
+function switchType(type) {
+  _currentType = type;
+  document.querySelectorAll('.type-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  filterCards();
+}
 fMarke.addEventListener('change', filterCards);
 fAchs.addEventListener('change',  filterCards);
 filterCards();
