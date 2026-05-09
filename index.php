@@ -492,14 +492,15 @@ footer a { color: var(--orange); text-decoration: none; }
 
 <div class="grid" id="grid">
 <?php if (empty($robots)): ?>
-  <div class="empty-state">
+  <div class="empty-state" data-type-empty="robot">
     <div class="icon">⬡</div>
-    Noch keine Robotermodelle in der Bibliothek.<br>
-    <a href="manage.php" style="color:var(--orange)">Erstes Modell hochladen →</a>
+    Noch keine Einträge in der Bibliothek.<br>
+    <a href="manage.php" style="color:var(--orange)">Ersten Eintrag hochladen →</a>
   </div>
 <?php else: ?>
   <?php foreach ($robots as $r): ?>
   <?php
+    $rtype = $r['type'] ?? 'robot';
     $thumb = $r['thumb_url'] ?? '';
     $zip   = $r['zip_url']   ?? '';
     $name  = htmlspecialchars($r['name']   ?? '—');
@@ -512,6 +513,7 @@ footer a { color: var(--orange); text-decoration: none; }
     $wg    = floatval($r['wiederholgenauigkeit_mm'] ?? 0);
   ?>
   <div class="card"
+       data-type="<?= $rtype ?>"
        data-name="<?= strtolower($name . ' ' . $marke . ' ' . $mod) ?>"
        data-marke="<?= strtolower(htmlspecialchars($r['marke'] ?? '')) ?>"
        data-achsen="<?= $achsen ?>">
@@ -521,27 +523,29 @@ footer a { color: var(--orange); text-decoration: none; }
         <img src="<?= htmlspecialchars($thumb) ?>" alt="<?= $name ?>">
       <?php else: ?>
         <div class="no-thumb">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="10" r="5" stroke="#6a8fa8" stroke-width="1.5"/>
-            <line x1="20" y1="15" x2="20" y2="25" stroke="#6a8fa8" stroke-width="1.5"/>
-            <line x1="20" y1="20" x2="10" y2="30" stroke="#6a8fa8" stroke-width="1.5"/>
-            <line x1="20" y1="20" x2="30" y2="30" stroke="#6a8fa8" stroke-width="1.5"/>
-          </svg>
+          <div style="font-size:40px;opacity:.3"><?= $rtype==='endeffektor'?'🔧':($rtype==='umfeld'?'🏭':'⬡') ?></div>
           KEIN BILD
         </div>
       <?php endif; ?>
     </div>
 
     <div class="card-body">
-      <div class="card-name"><?= $name ?></div>
+      <div class="card-name">
+        <span style="font-size:.7em;opacity:.6;margin-right:4px"><?= $rtype==='endeffektor'?'🔧':($rtype==='umfeld'?'🏭':'🦾') ?></span>
+        <?= $name ?>
+      </div>
       <table class="card-specs">
-        <tr><td>Marke</td>              <td><?= $marke ?></td></tr>
-        <tr><td>Modell</td>             <td><?= $mod ?></td></tr>
-        <tr><td>Achsen</td>             <td><?= $achsen ?></td></tr>
-        <tr><td>Reichweite</td>         <td><?= $rw ?> mm</td></tr>
-        <tr><td>Nutzlast</td>           <td><?= $nl ?> kg</td></tr>
-        <tr><td>Gewicht</td>            <td><?= $gw ?> kg</td></tr>
-        <tr><td>Wiederholgen.</td>       <td><?= $wg ?> mm</td></tr>
+        <tr><td>Marke</td>  <td><?= $marke ?></td></tr>
+        <tr><td>Modell</td> <td><?= $mod ?></td></tr>
+        <?php if ($rtype === 'robot'): ?>
+        <tr><td>Achsen</td>      <td><?= $achsen ?></td></tr>
+        <tr><td>Reichweite</td>  <td><?= $rw ?> mm</td></tr>
+        <tr><td>Nutzlast</td>    <td><?= $nl ?> kg</td></tr>
+        <tr><td>Gewicht</td>     <td><?= $gw ?> kg</td></tr>
+        <tr><td>Wiederholgen.</td><td><?= $wg ?> mm</td></tr>
+        <?php elseif ($rtype === 'endeffektor'): ?>
+        <?php if ($gw): ?><tr><td>Gewicht</td><td><?= $gw ?> kg</td></tr><?php endif; ?>
+        <?php endif; ?>
       </table>
     </div>
 
