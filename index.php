@@ -10,7 +10,10 @@ if (isset($_GET['logout'])) {
     header('Location: index.php'); exit;
 }
 $isAdmin = rl_session_auth();
-$robots = array_values(rl_load_robots());
+$robots     = array_values(rl_load_robots());
+$robots_r   = array_filter($robots, fn($r) => ($r['type']??'robot') === 'robot');
+$robots_eff = array_filter($robots, fn($r) => ($r['type']??'robot') === 'endeffektor');
+$robots_umf = array_filter($robots, fn($r) => ($r['type']??'robot') === 'umfeld');
 // Sort by name
 usort($robots, fn($a, $b) => strcmp($a['name'], $b['name']));
 
@@ -415,6 +418,12 @@ footer a { color: var(--orange); text-decoration: none; }
 #thumbZoom img {
   display:block;width:420px;height:420px;object-fit:contain;background:#060e14;
 }
+.type-tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto 16px;padding:0 20px}
+.type-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.type-tab.active{background:rgba(255,96,0,.15);border-color:var(--orange);color:var(--orange)}
+.type-tab:hover:not(.active){border-color:var(--orange);color:var(--text)}
+.type-cnt{display:inline-block;background:rgba(255,255,255,.1);border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px}
+.type-tab.active .type-cnt{background:rgba(255,96,0,.2)}
 </style>
 </head>
 <body>
@@ -456,6 +465,11 @@ footer a { color: var(--orange); text-decoration: none; }
   </p>
 </div>
 
+<div class="type-tabs">
+  <button class="type-tab active" data-type="robot"      onclick="switchType('robot')">🦾 Roboter <span class="type-cnt" id="cnt-robot"><?= count($robots_r) ?></span></button>
+  <button class="type-tab"        data-type="endeffektor" onclick="switchType('endeffektor')">🔧 Endeffektoren <span class="type-cnt" id="cnt-eff"><?= count($robots_eff) ?></span></button>
+  <button class="type-tab"        data-type="umfeld"      onclick="switchType('umfeld')">🏭 Umfeld <span class="type-cnt" id="cnt-umf"><?= count($robots_umf) ?></span></button>
+</div>
 <div class="filter-bar">
   <input type="text" id="search" placeholder="Suchen… (Name, Marke, Modell)">
   
@@ -580,7 +594,8 @@ function filterCards() {
   const a = fAchs.value;
   let vis = 0;
   cards.forEach(c => {
-    const matchQ = !q || c.dataset.name.includes(q);
+    const matchType = (c.dataset.type||'robot') === _currentType;
+    const matchQ = !matchType ? false : (!q || c.dataset.name.includes(q));
     const matchM = !m || c.dataset.marke === m;
     const matchA = !a || c.dataset.achsen === a;
     const show   = matchQ && matchM && matchA;
