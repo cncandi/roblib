@@ -441,7 +441,7 @@ footer a { color: var(--orange); text-decoration: none; }
     </nav>
   </div>
   <div class="header-right">
-    <button id="rlThemeBtn" onclick="rlToggleTheme()" title="Theme wechseln" style="background:none;border:none;font-size:18px;cursor:pointer;margin-right:8px;padding:2px 6px">◑</button>
+    <button id="rlThemeBtn" onclick="rlToggleTheme()" title="Theme wechseln" style="background:none;border:1px solid var(--orange);color:var(--orange);font-size:16px;cursor:pointer;margin-right:8px;padding:2px 8px;border-radius:4px">◑</button>
     <?php if ($isAdmin): ?>
       <span style="font-family:var(--mono);font-size:11px;color:var(--orange);margin-right:8px">&#x25CF; ADMIN</span>
       <button onclick="openUserManager()"
