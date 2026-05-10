@@ -89,7 +89,6 @@ case 'download':
 // ── UPLOAD ──────────────────────────────────────────────────
 case 'upload':
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
-    api_require_auth();
 
     // name always required
     if (trim($_POST['name'] ?? '') === '') api_error(400, "Feld 'name' fehlt.");
@@ -137,7 +136,6 @@ case 'update':
 // ── DELETE ──────────────────────────────────────────────────
 case 'delete':
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
-    api_require_auth();
 
     $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
     if (!$id) api_error(400, 'ID fehlt.');
