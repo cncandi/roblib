@@ -120,7 +120,7 @@ case 'upload':
 // ── UPDATE ──────────────────────────────────────────────────
 case 'update':
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405, 'POST erforderlich.');
-    api_require_auth();
+    // api_require_auth(); // auth deaktiviert
 
     $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
     if (!$id) api_error(400, 'ID fehlt.');
