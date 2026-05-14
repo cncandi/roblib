@@ -1,5 +1,12 @@
 # ROBLIB – Apache-Konfiguration
 
+# CORS für alle Dateien (ZIP, Bilder etc.)
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
+
 # config.php und data/ niemals direkt ausliefern
 <Files "config.php">
     Order allow,deny
