@@ -421,7 +421,7 @@ footer a { color: var(--orange); text-decoration: none; }
 #thumbZoom img {
   display:block;width:420px;height:420px;object-fit:contain;background:#060e14;
 }
-.type-tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto 16px;padding:0 20px}
+.type-tabs{display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:0 0 16px;padding:0 20px}
 .type-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
 .type-tab.active{background:rgba(255,96,0,.15);border-color:var(--orange);color:var(--orange)}
 .type-tab:hover:not(.active){border-color:var(--orange);color:var(--text)}
