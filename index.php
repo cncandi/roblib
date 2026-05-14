@@ -533,6 +533,7 @@ footer a { color: var(--orange); text-decoration: none; }
     $nl    = floatval($r['nutzlast_kg'] ?? 0);
     $gw    = floatval($r['gewicht_kg']  ?? 0);
     $wg    = floatval($r['wiederholgenauigkeit_mm'] ?? 0);
+    $beschr = htmlspecialchars($r['beschreibung'] ?? '');
   ?>
   <div class="card"
        data-type="<?= $rtype ?>"
@@ -553,21 +554,22 @@ footer a { color: var(--orange); text-decoration: none; }
 
     <div class="card-body">
       <div class="card-name">
-        <span style="font-size:.7em;opacity:.6;margin-right:4px"><?= $rtype==='endeffektor'?'🔧':($rtype==='umfeld'?'🏭':'🦾') ?></span>
+        <span style="font-size:.7em;opacity:.6;margin-right:4px"><?php
+          $icon = match($rtype) { 'robot'=>'🦾','endeffektor'=>'🔧','umfeld'=>'🏭','positioner'=>'🔄','rail'=>'🛤️','fixture'=>'🧱','station'=>'🏗️',default=>'📦' };
+          echo $icon; ?></span>
         <?= $name ?>
       </div>
       <table class="card-specs">
-        <tr><td>Marke</td>  <td><?= $marke ?></td></tr>
-        <tr><td>Modell</td> <td><?= $mod ?></td></tr>
+        <?php if ($marke): ?><tr><td>Marke</td><td><?= $marke ?></td></tr><?php endif; ?>
+        <?php if ($mod):   ?><tr><td>Modell</td><td><?= $mod ?></td></tr><?php endif; ?>
         <?php if ($rtype === 'robot'): ?>
         <tr><td>Achsen</td>      <td><?= $achsen ?></td></tr>
         <tr><td>Reichweite</td>  <td><?= $rw ?> mm</td></tr>
         <tr><td>Nutzlast</td>    <td><?= $nl ?> kg</td></tr>
         <tr><td>Gewicht</td>     <td><?= $gw ?> kg</td></tr>
         <tr><td>Wiederholgen.</td><td><?= $wg ?> mm</td></tr>
-        <?php elseif ($rtype === 'endeffektor'): ?>
-        <?php if ($gw): ?><tr><td>Gewicht</td><td><?= $gw ?> kg</td></tr><?php endif; ?>
         <?php endif; ?>
+        <?php if ($beschr): ?><tr><td colspan="2" style="color:#6a8fa8;font-size:11px;padding-top:4px"><?= $beschr ?></td></tr><?php endif; ?>
       </table>
     </div>
 
@@ -576,6 +578,7 @@ footer a { color: var(--orange); text-decoration: none; }
       <?php if($isAdmin):?>
         <button class="btn-edit"
           data-id="<?php echo htmlspecialchars($r['id'],ENT_QUOTES);?>"
+          data-type="<?php echo htmlspecialchars($rtype,ENT_QUOTES);?>"
           data-name="<?php echo htmlspecialchars($r['name'],ENT_QUOTES);?>"
           data-marke="<?php echo htmlspecialchars($r['marke'],ENT_QUOTES);?>"
           data-modell="<?php echo htmlspecialchars($r['modell'],ENT_QUOTES);?>"
@@ -584,6 +587,7 @@ footer a { color: var(--orange); text-decoration: none; }
           data-nutzlast="<?php echo floatval($r['nutzlast_kg']);?>"
           data-gewicht="<?php echo floatval($r['gewicht_kg']);?>"
           data-wdh="<?php echo floatval($r['wiederholgenauigkeit_mm']);?>"
+          data-beschreibung="<?php echo htmlspecialchars($r['beschreibung']??'',ENT_QUOTES);?>"
           data-thumb="<?php echo htmlspecialchars($r['thumb_url']??'',ENT_QUOTES);?>"
           onclick="rlEdit(this)">&#x270E; Bearbeiten</button>
         <button class="btn-delete"
@@ -669,6 +673,7 @@ function rlDelete(btn){
 var _rlId = '';
 function rlEdit(btn) {
   _rlId = btn.getAttribute('data-id');
+  var rtype = btn.getAttribute('data-type') || 'robot';
   document.getElementById('rl-name').value      = btn.getAttribute('data-name');
   document.getElementById('rl-marke').value     = btn.getAttribute('data-marke');
   document.getElementById('rl-modell').value    = btn.getAttribute('data-modell');
@@ -677,6 +682,9 @@ function rlEdit(btn) {
   document.getElementById('rl-nutzlast').value  = btn.getAttribute('data-nutzlast');
   document.getElementById('rl-gewicht').value   = btn.getAttribute('data-gewicht');
   document.getElementById('rl-wdh').value       = btn.getAttribute('data-wdh');
+  document.getElementById('rl-beschreibung').value = btn.getAttribute('data-beschreibung') || '';
+  var robotFields = document.getElementById('rl-robot-fields');
+  if (robotFields) robotFields.style.display = rtype === 'robot' ? 'contents' : 'none';
   var thumb = btn.getAttribute('data-thumb');
   var img = document.getElementById('rl-thumb-img');
   if (thumb) { img.src=thumb; img.style.display='block'; } else { img.style.display='none'; }
@@ -700,6 +708,7 @@ function rlSave() {
   fd.append('nutzlast_kg',   document.getElementById('rl-nutzlast').value);
   fd.append('gewicht_kg',    document.getElementById('rl-gewicht').value);
   fd.append('wiederholgenauigkeit_mm', document.getElementById('rl-wdh').value);
+  fd.append('beschreibung', document.getElementById('rl-beschreibung').value);
   var thumbFile = document.getElementById('rl-thumb-file').files[0];
   if (thumbFile) fd.append('thumb', thumbFile, thumbFile.name);
   fetch('api.php', {method:'POST',body:fd})
@@ -724,7 +733,7 @@ function rlSave() {
 <div id="rlModal" class="rl-overlay" style="display:none">
   <div class="rl-modal">
     <div class="rl-modal-head">
-      <span>&#x270E; Roboter bearbeiten</span>
+      <span>&#x270E; Bearbeiten</span>
       <button class="rl-close" onclick="document.getElementById('rlModal').style.display='none'">&#x2715;</button>
     </div>
     <div class="rl-modal-body">
@@ -733,11 +742,16 @@ function rlSave() {
         <label class="rl-span2">Name<input id="rl-name" type="text"></label>
         <label>Marke<input id="rl-marke" type="text"></label>
         <label>Modell<input id="rl-modell" type="text"></label>
-        <label>Achsen<input id="rl-achsen" type="number" min="1" max="9"></label>
-        <label>Reichweite (mm)<input id="rl-reichweite" type="number"></label>
-        <label>Nutzlast (kg)<input id="rl-nutzlast" type="number" step="0.1"></label>
-        <label>Gewicht (kg)<input id="rl-gewicht" type="number" step="0.1"></label>
-        <label>Wiederholgenaui. (mm)<input id="rl-wdh" type="number" step="0.001"></label>
+        <div id="rl-robot-fields" style="display:contents">
+          <label>Achsen<input id="rl-achsen" type="number" min="1" max="9"></label>
+          <label>Reichweite (mm)<input id="rl-reichweite" type="number"></label>
+          <label>Nutzlast (kg)<input id="rl-nutzlast" type="number" step="0.1"></label>
+          <label>Gewicht (kg)<input id="rl-gewicht" type="number" step="0.1"></label>
+          <label>Wiederholgenaui. (mm)<input id="rl-wdh" type="number" step="0.001"></label>
+        </div>
+        <label class="rl-span2">Beschreibung
+          <textarea id="rl-beschreibung" rows="2" style="background:#0f2030;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px 8px;color:#d8e8f0;font-family:monospace;font-size:12px;outline:none;width:100%;margin-top:4px;resize:vertical"></textarea>
+        </label>
         <label class="rl-span2">Thumbnail
           <input id="rl-thumb-file" type="file" accept="image/*"
             onchange="var r=new FileReader();r.onload=function(e){var img=document.getElementById('rl-thumb-img');img.src=e.target.result;img.style.display='block';};r.readAsDataURL(this.files[0]);">
