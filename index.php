@@ -164,7 +164,7 @@ header {
 .filter-bar {
   max-width: 1400px;
   margin: 20px auto 0;
-  padding: 0 24px;
+  padding: 0 24px; /* aligned via wrapper */
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -470,13 +470,15 @@ footer a { color: var(--orange); text-decoration: none; }
 </div>
 
 
-<div id="typeTabs" style="display:flex;gap:6px;flex-wrap:wrap;max-width:1400px;margin:0 auto 12px;padding:0 24px">
+<div style="max-width:1400px;margin:0 auto;padding:0 24px">
+<div id="typeTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
   <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
   <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
   <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
   <button class="type-tab" data-type="positioner">🔄 Positionierer <span class="type-cnt"><?= count($robots_pos) ?></span></button>
   <button class="type-tab" data-type="object">📦 Objekte <span class="type-cnt"><?= count($robots_obj) ?></span></button>
   <button class="type-tab" data-type="station">🏗️ Stationen <span class="type-cnt"><?= count($robots_sta) ?></span></button>
+</div>
 </div>
 <div class="filter-bar">
   <button id="btnNeu" onclick="rlOpenUploadModal()"
