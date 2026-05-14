@@ -470,7 +470,7 @@ footer a { color: var(--orange); text-decoration: none; }
 </div>
 
 
-<div id="typeTabs" style="display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:0 0 12px;padding:0 20px">
+<div id="typeTabs" style="display:flex;gap:6px;flex-wrap:wrap;max-width:1400px;margin:0 auto 12px;padding:0 24px">
   <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
   <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
   <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
