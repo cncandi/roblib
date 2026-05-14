@@ -64,7 +64,7 @@ function rl_add_robot(array $meta, string $zip_tmp, ?string $thumb_tmp): array|f
     }
 
     // Allowed types
-    $allowed_types = ['robot', 'endeffektor', 'umfeld'];
+    $allowed_types = ['robot', 'endeffektor', 'umfeld', 'positioner', 'object', 'station', 'positioner', 'object', 'station'];
     $type = trim($meta['type'] ?? 'robot');
     if (!in_array($type, $allowed_types)) $type = 'robot';
 
