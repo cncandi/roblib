@@ -16,6 +16,7 @@ $robots_eff = array_filter($robots, fn($r) => ($r['type']??'robot') === 'endeffe
 $robots_umf = array_filter($robots, fn($r) => ($r['type']??'robot') === 'umfeld');
 $robots_pos = array_filter($robots, fn($r) => ($r['type']??'robot') === 'positioner');
 $robots_obj = array_filter($robots, fn($r) => ($r['type']??'robot') === 'object');
+$robots_fix = array_filter($robots, fn($r) => ($r['type']??'robot') === 'fixture');
 $robots_sta = array_filter($robots, fn($r) => ($r['type']??'robot') === 'station');
 $robots_rail = array_filter($robots, fn($r) => ($r['type']??'robot') === 'rail');
 // Sort by name
@@ -477,7 +478,8 @@ footer a { color: var(--orange); text-decoration: none; }
   <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
   <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
   <button class="type-tab" data-type="positioner">🔄 Positionierer <span class="type-cnt"><?= count($robots_pos) ?></span></button>
-  <button class="type-tab" data-type="object">📦 Objekte <span class="type-cnt"><?= count($robots_obj) ?></span></button>
+  <button class="type-tab" data-type="object">📦 Bewegl. Obj. <span class="type-cnt"><?= count($robots_obj) ?></span></button>
+  <button class="type-tab" data-type="fixture">🧱 Feste Obj. <span class="type-cnt"><?= count($robots_fix) ?></span></button>
   <button class="type-tab" data-type="station">🏗️ Stationen <span class="type-cnt"><?= count($robots_sta) ?></span></button>
   <button class="type-tab" data-type="rail">🛤️ Schienen <span class="type-cnt"><?= count($robots_rail) ?></span></button>
 </div>
@@ -1036,6 +1038,7 @@ function deleteUser(id, name) {
           <option value="umfeld">🏭 Umfeld / Umgebung</option>
           <option value="positioner">🔄 Rotationstisch / Positionierer</option>
           <option value="object">📦 Bewegliches Objekt</option>
+          <option value="fixture">🧱 Festes Objekt</option>
           <option value="station">🏗️ Station</option>
           <option value="rail">🛤️ Schiene / Rail</option>
         </select>
