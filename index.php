@@ -14,6 +14,9 @@ $robots     = array_values(rl_load_robots());
 $robots_r   = array_filter($robots, fn($r) => ($r['type']??'robot') === 'robot');
 $robots_eff = array_filter($robots, fn($r) => ($r['type']??'robot') === 'endeffektor');
 $robots_umf = array_filter($robots, fn($r) => ($r['type']??'robot') === 'umfeld');
+$robots_pos = array_filter($robots, fn($r) => ($r['type']??'robot') === 'positioner');
+$robots_obj = array_filter($robots, fn($r) => ($r['type']??'robot') === 'object');
+$robots_sta = array_filter($robots, fn($r) => ($r['type']??'robot') === 'station');
 // Sort by name
 usort($robots, fn($a, $b) => strcmp($a['name'], $b['name']));
 
@@ -471,6 +474,9 @@ footer a { color: var(--orange); text-decoration: none; }
   <button class="type-tab active" data-type="robot">🦾 Roboter <span class="type-cnt"><?= count($robots_r) ?></span></button>
   <button class="type-tab" data-type="endeffektor">🔧 Endeffektoren <span class="type-cnt"><?= count($robots_eff) ?></span></button>
   <button class="type-tab" data-type="umfeld">🏭 Umfeld <span class="type-cnt"><?= count($robots_umf) ?></span></button>
+  <button class="type-tab" data-type="positioner">🔄 Positionierer <span class="type-cnt"><?= count($robots_pos) ?></span></button>
+  <button class="type-tab" data-type="object">📦 Objekte <span class="type-cnt"><?= count($robots_obj) ?></span></button>
+  <button class="type-tab" data-type="station">🏗️ Stationen <span class="type-cnt"><?= count($robots_sta) ?></span></button>
 </div>
 <div class="filter-bar">
   <button id="btnNeu" onclick="rlOpenUploadModal()"
@@ -1024,6 +1030,9 @@ function deleteUser(id, name) {
           <option value="robot">🦾 Roboter (nur via RobModel)</option>
           <option value="endeffektor">🔧 Endeffektor</option>
           <option value="umfeld">🏭 Umfeld / Umgebung</option>
+          <option value="positioner">🔄 Rotationstisch / Positionierer</option>
+          <option value="object">📦 Bewegliches Objekt</option>
+          <option value="station">🏗️ Station</option>
         </select>
       </label>
       <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">NAME *
