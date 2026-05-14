@@ -17,6 +17,7 @@ $robots_umf = array_filter($robots, fn($r) => ($r['type']??'robot') === 'umfeld'
 $robots_pos = array_filter($robots, fn($r) => ($r['type']??'robot') === 'positioner');
 $robots_obj = array_filter($robots, fn($r) => ($r['type']??'robot') === 'object');
 $robots_sta = array_filter($robots, fn($r) => ($r['type']??'robot') === 'station');
+$robots_rail = array_filter($robots, fn($r) => ($r['type']??'robot') === 'rail');
 // Sort by name
 usort($robots, fn($a, $b) => strcmp($a['name'], $b['name']));
 
@@ -478,6 +479,7 @@ footer a { color: var(--orange); text-decoration: none; }
   <button class="type-tab" data-type="positioner">🔄 Positionierer <span class="type-cnt"><?= count($robots_pos) ?></span></button>
   <button class="type-tab" data-type="object">📦 Objekte <span class="type-cnt"><?= count($robots_obj) ?></span></button>
   <button class="type-tab" data-type="station">🏗️ Stationen <span class="type-cnt"><?= count($robots_sta) ?></span></button>
+  <button class="type-tab" data-type="rail">🛤️ Schienen <span class="type-cnt"><?= count($robots_rail) ?></span></button>
 </div>
 </div>
 <div class="filter-bar">
@@ -1035,6 +1037,7 @@ function deleteUser(id, name) {
           <option value="positioner">🔄 Rotationstisch / Positionierer</option>
           <option value="object">📦 Bewegliches Objekt</option>
           <option value="station">🏗️ Station</option>
+          <option value="rail">🛤️ Schiene / Rail</option>
         </select>
       </label>
       <label style="font-size:10px;color:var(--text-dim);letter-spacing:.08em">NAME *
