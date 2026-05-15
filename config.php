@@ -1,4 +1,5 @@
 <?php
+define('ROBLIB_VERSION', '1.2');
 define("ROBLIB_USERS", [
     "admin"  => "F###mill55",
 ]);
