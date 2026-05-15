@@ -441,7 +441,7 @@ footer a { color: var(--orange); text-decoration: none; }
     </div>
     <nav class="header-nav">
       <a href="index.php" <?= (!isset($_GET['tab'])||$_GET['tab']!=='krl')?'class="active"':'' ?>>BIBLIOTHEK</a>
-      <a href="index.php?tab=krl" <?= (($_GET['tab']??'')==='krl')?'class="active"':'' ?>>KRL PROGRAMME</a>
+      <a href="index.php?tab=krl" <?= (($_GET['tab']??'')==='krl')?'class="active"':'' ?>>PROGRAMME</a>
       <a href="https://cnc-technik.de/robsimul/robmodel/" target="_blank">ROBMODEL</a>
       <a href="https://cnc-technik.de/robsimul/" target="_blank">ROBSIMUL</a>
       <a href="https://cnc-technik.de/kuka/" target="_blank">KRL EDITOR</a>
@@ -467,10 +467,10 @@ footer a { color: var(--orange); text-decoration: none; }
 
 <?php if (($_GET['tab']??'') === 'krl'): ?>
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!--  KRL PROGRAMME TAB                                                         -->
+<!--  PROGRAMME TAB                                                         -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="hero">
-  <h1>KRL PROGRAMME</h1>
+  <h1>PROGRAMME</h1>
   <p>Programme &amp; Snippets für den <strong style="color:var(--orange)">KRL Editor</strong> · Community-Bibliothek</p>
 </div>
 
