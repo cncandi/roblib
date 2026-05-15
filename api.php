@@ -297,6 +297,35 @@ case 'krl_download':
     krl_save($progs);
     api_json(['ok'=>true,'content'=>$content,'filename'=>$prog['filename'],'name'=>$prog['name'],'points'=>$newPts]);
 
+// ── KRL_SET_POINTS (Admin) ────────────────────────────────────
+case 'krl_set_points':
+    krl_init();
+    $u    = trim($_POST['user']   ?? $_GET['user']   ?? '');
+    $pts  = intval($_POST['points'] ?? $_GET['points'] ?? -1);
+    $admin_u = trim($_POST['admin_user'] ?? '');
+    $admin_p = trim($_POST['admin_pass'] ?? '');
+    if (!rl_check_auth($admin_u, $admin_p)) api_error(403,'Admin-Authentifizierung fehlgeschlagen');
+    if (!$u) api_error(400,'Kein Benutzer angegeben');
+    if ($pts < 0) api_error(400,'Ungültige Punktzahl');
+    $all = krl_pts_load();
+    $all[$u]['points'] = $pts;
+    krl_pts_save($all);
+    api_json(['ok'=>true,'user'=>$u,'points'=>$pts]);
+
+// ── KRL_USERS (Admin — alle Benutzer mit Punkten) ─────────────
+case 'krl_users':
+    krl_init();
+    $admin_u = trim($_POST['admin_user'] ?? $_GET['admin_user'] ?? '');
+    $admin_p = trim($_POST['admin_pass'] ?? $_GET['admin_pass'] ?? '');
+    if (!rl_check_auth($admin_u, $admin_p)) api_error(403,'Admin-Authentifizierung fehlgeschlagen');
+    $pts  = krl_pts_load();
+    $list = [];
+    foreach ($pts as $name => $data) {
+        $list[] = ['user'=>$name,'points'=>$data['points']??50,'uploads'=>$data['uploads']??0,'downloads'=>$data['downloads']??0];
+    }
+    usort($list, fn($a,$b) => $b['points']-$a['points']);
+    api_json(['ok'=>true,'users'=>$list]);
+
 // ── KRL_LIKE ─────────────────────────────────────────────────
 case 'krl_like':
     krl_init();

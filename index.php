@@ -489,6 +489,9 @@ footer a { color: var(--orange); text-decoration: none; }
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <span id="kUserLabel" style="font-family:var(--mono);font-size:12px;color:var(--text-dim)"></span>
+      <?php if ($isAdmin): ?>
+      <button onclick="kShowPointsAdmin()" style="background:rgba(255,96,0,.1);border:1px solid rgba(255,96,0,.4);color:var(--orange);font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer">⚙ PUNKTE</button>
+      <?php endif; ?>
       <button onclick="kShowUpload()" style="background:rgba(255,96,0,.15);border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:.06em">
         ↑ HOCHLADEN (+10 Punkte)
       </button>
@@ -790,6 +793,65 @@ function kToast(msg, dur=3500) {
     </form>
   </div>
 </div>
+
+<!-- Admin Punkte-Verwaltung Modal -->
+<div id="kPtsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:center;justify-content:center;z-index:300" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px;width:480px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <span style="font-family:var(--mono);font-size:14px;color:var(--orange);font-weight:700">⚙ PUNKTE VERWALTEN</span>
+      <button onclick="document.getElementById('kPtsModal').style.display='none'" style="background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="color:var(--text-dim);font-size:11px;font-family:var(--mono)">
+          <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">BENUTZER</th>
+          <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border)">PUNKTE</th>
+          <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border)">UPLOADS</th>
+          <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border)">DOWNLOADS</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead>
+        <tbody id="kPtsBody"><tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-dim)">Lädt…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <input id="kPtsUser" placeholder="Benutzername" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px 10px;color:var(--text);font-size:13px;outline:none">
+      <input id="kPtsVal" type="number" min="0" placeholder="Punkte" style="width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px 10px;color:var(--text);font-size:13px;outline:none">
+      <button onclick="kSetPoints()" style="background:var(--orange);color:#000;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--mono)">SETZEN</button>
+    </div>
+    <div id="kPtsMsg" style="font-size:11px;margin-top:6px"></div>
+  </div>
+</div>
+
+<script>
+const KAPI_ADMIN_PASS = '<?= addslashes(ROBLIB_USERS['admin'] ?? '') ?>';
+async function kShowPointsAdmin() {
+  document.getElementById('kPtsModal').style.display = 'flex';
+  const r = await fetch(`${KAPI}?action=krl_users&admin_user=admin&admin_pass=${encodeURIComponent(KAPI_ADMIN_PASS)}`);
+  const d = await r.json();
+  if (!d.ok) { document.getElementById('kPtsBody').innerHTML=`<tr><td colspan="5" style="color:#F88;padding:12px">${d.error}</td></tr>`; return; }
+  document.getElementById('kPtsBody').innerHTML = d.users.map(u => `
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px;color:var(--text)">${u.user}</td>
+      <td style="padding:8px;text-align:center;color:var(--orange);font-weight:700">${u.points}</td>
+      <td style="padding:8px;text-align:center;color:var(--text-dim)">${u.uploads}</td>
+      <td style="padding:8px;text-align:center;color:var(--text-dim)">${u.downloads}</td>
+      <td style="padding:8px"><button onclick="document.getElementById('kPtsUser').value='${u.user}';document.getElementById('kPtsVal').value=${u.points}" style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:2px 8px;border-radius:3px;cursor:pointer;font-size:11px">✎</button></td>
+    </tr>`).join('');
+}
+async function kSetPoints() {
+  const user = document.getElementById('kPtsUser').value.trim();
+  const pts  = parseInt(document.getElementById('kPtsVal').value);
+  const msg  = document.getElementById('kPtsMsg');
+  if (!user || isNaN(pts)) { msg.style.color='#F88'; msg.textContent='Benutzer und Punkte eingeben'; return; }
+  const r = await fetch(`${KAPI}?action=krl_set_points`, {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`user=${encodeURIComponent(user)}&points=${pts}&admin_user=admin&admin_pass=${encodeURIComponent(KAPI_ADMIN_PASS)}`,
+  });
+  const d = await r.json();
+  if (d.ok) { msg.style.color='#4EC9B0'; msg.textContent=`✓ ${user}: ${d.points} Punkte gesetzt`; kShowPointsAdmin(); }
+  else       { msg.style.color='#F88';    msg.textContent=`❌ ${d.error}`; }
+}
+</script>
 
 <?php else: ?>
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
