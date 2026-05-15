@@ -9,11 +9,11 @@ require_once __DIR__ . '/config.php';
 function rl_load_robots(): array {
     if (!file_exists(DATA_FILE)) return [];
     $json = file_get_contents(DATA_FILE);
-    return json_decode($json, true) ?? [];
+    return json_decode($json, true, 512, JSON_THROW_ON_ERROR) ?? [];
 }
 
 function rl_save_robots(array $robots): void {
-    file_put_contents(DATA_FILE, json_encode(array_values($robots), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    file_put_contents(DATA_FILE, json_encode(array_values($robots), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 }
 
 // ------ Authentifizierung --------------------------------------
@@ -154,11 +154,11 @@ define('USERS_FILE', __DIR__ . '/data/users.json');
 
 function rl_load_users(): array {
     if (!file_exists(USERS_FILE)) return [];
-    return json_decode(file_get_contents(USERS_FILE), true) ?? [];
+    return json_decode(file_get_contents(USERS_FILE), true, 512, JSON_THROW_ON_ERROR) ?? [];
 }
 
 function rl_save_users(array $users): void {
-    file_put_contents(USERS_FILE, json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    file_put_contents(USERS_FILE, json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 }
 
 function rl_check_user_auth(string $user, string $pass): array|false {
@@ -212,10 +212,10 @@ function krl_init(): void {
     if (!file_exists(KRL_PTS_FILE))  file_put_contents(KRL_PTS_FILE,  '{}');
 }
 
-function krl_load(): array  { return json_decode(file_get_contents(KRL_META_FILE), true) ?? []; }
-function krl_save(array $d): void { file_put_contents(KRL_META_FILE, json_encode(array_values($d), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)); }
+function krl_load(): array  { return json_decode(file_get_contents(KRL_META_FILE), true, 512, JSON_THROW_ON_ERROR) ?? []; }
+function krl_save(array $d): void { file_put_contents(KRL_META_FILE, json_encode(array_values($d), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE), LOCK_EX); }
 
-function krl_pts_load(): array  { return json_decode(file_get_contents(KRL_PTS_FILE), true) ?? []; }
+function krl_pts_load(): array  { return json_decode(file_get_contents(KRL_PTS_FILE), true, 512, JSON_THROW_ON_ERROR) ?? []; }
 function krl_pts_save(array $d): void { file_put_contents(KRL_PTS_FILE, json_encode($d)); }
 
 function krl_get_points(string $u): int {
