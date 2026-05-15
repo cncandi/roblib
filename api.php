@@ -205,6 +205,15 @@ case 'krl_list':
         str_contains(strtolower($p['tags']??''), $q)
     ));
     usort($progs, fn($a,$b) => ($b['date']??0)-($a['date']??0));
+    // Vorschau: erste 30 Zeilen der Datei
+    foreach ($progs as &$p) {
+        $path = KRL_DIR.($p['id']??'').'/'.($p['filename']??'');
+        if (file_exists($path)) {
+            $lines = array_slice(explode("\n", file_get_contents($path)), 0, 30);
+            $p['preview'] = implode("\n", $lines);
+        }
+    }
+    unset($p);
     api_json(['ok'=>true,'programs'=>$progs,'total'=>count($progs)]);
 
 // ── KRL_POINTS ───────────────────────────────────────────────

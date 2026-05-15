@@ -571,8 +571,10 @@ footer a { color: var(--orange); text-decoration: none; }
 
 <style>
 .kfl-btn.active { border-color:var(--orange)!important;color:var(--orange)!important; }
-.kcard { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s; }
+.kcard { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;position:relative; }
 .kcard:hover { border-color:#334; }
+.kpreview { display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:#0A1A0A;border:1px solid #2A5A2A;border-radius:6px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.6); }
+.kcard:hover .kpreview { display:block; }
 .kcat { font-size:10px;font-weight:700;border-radius:3px;padding:2px 7px;text-transform:uppercase;flex-shrink:0 }
 .kcat-program   { background:#F0A03022;color:#F0A030;border:1px solid #F0A03044 }
 .kcat-snippet   { background:#569CD622;color:#569CD6;border:1px solid #569CD644 }
@@ -646,7 +648,10 @@ function kMakeCard(p) {
   const delBt = kUser===p.author
     ? `<button onclick="kDelete('${p.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px">🗑</button>` : '';
   const dt = p.date ? new Date(p.date*1000).toLocaleDateString('de-DE') : '';
+  const preview = (p.preview||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  div.style.position = 'relative';
   div.innerHTML = `
+    ${preview ? `<div class="kpreview"><pre style="margin:0;font-size:10px;line-height:1.4;white-space:pre-wrap;color:#4EC9B0;max-height:200px;overflow:hidden">${preview}</pre></div>` : ''}
     <div style="display:flex;align-items:flex-start;gap:8px">
       <span class="kcat kcat-${p.category}">${kCatLabel[p.category]||p.category}</span>
       <span style="font-weight:600;font-size:14px;color:var(--text-bright);flex:1">${p.name}</span>
@@ -748,6 +753,43 @@ function kToast(msg, dur=3500) {
   t._t = setTimeout(() => t.style.display='none', dur);
 }
 </script>
+
+<!-- Theme + Login: immer verfügbar (auch im KRL-Tab) -->
+<style id="rl-theme-style"></style>
+<script>
+(function(){
+  var themes=[
+    {vars:{'--bg':'#09131c','--bg2':'#0d1a26','--bg3':'#0f2030','--card':'#0d1e2e','--card-hover':'#112435','--border':'#1a3348','--text':'#d8e8f0','--text-dim':'#6a8fa8','--text-bright':'#ffffff'}},
+    {vars:{'--bg':'#1e1e1e','--bg2':'#252526','--bg3':'#2d2d30','--card':'#252526','--card-hover':'#2a2a2c','--border':'#3e3e42','--text':'#d4d4d4','--text-dim':'#808080','--text-bright':'#ffffff'}},
+    {vars:{'--bg':'#f5f5f0','--bg2':'#eaeae5','--bg3':'#ddddd8','--card':'#eaeae5','--card-hover':'#e0e0da','--border':'#b8b8b2','--text':'#1a2a3a','--text-dim':'#4a6a8a','--text-bright':'#000000'}},
+    {vars:{'--bg':'#000408','--bg2':'#040c14','--bg3':'#081420','--card':'#040c14','--card-hover':'#081420','--border':'#0a2030','--text':'#a0c8e0','--text-dim':'#3a6080','--text-bright':'#ffffff'}},
+  ];
+  var idx=parseInt(localStorage.getItem('rl-theme')||'0');
+  function applyTheme(i){
+    var t=themes[i]||themes[0];
+    document.getElementById('rl-theme-style').textContent='body{'+Object.entries(t.vars).map(function(e){return e[0]+':'+e[1]}).join(';')+'}';
+    var btn=document.getElementById('rlThemeBtn');
+    if(btn)btn.textContent='◑';
+    localStorage.setItem('rl-theme',i); idx=i;
+  }
+  window.rlToggleTheme=function(){applyTheme((idx+1)%themes.length);};
+  document.addEventListener('DOMContentLoaded',function(){applyTheme(idx);});
+})();
+</script>
+<div id="loginModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0d1a26;border:1px solid var(--orange);border-radius:8px;width:min(320px,92vw);padding:24px">
+    <div style="font-family:var(--mono);font-size:13px;color:var(--orange);margin-bottom:18px;letter-spacing:.06em">&#x25A0; ADMIN LOGIN</div>
+    <form method="post" style="display:flex;flex-direction:column;gap:12px">
+      <input type="hidden" name="action" value="login">
+      <input type="text" name="user" placeholder="Benutzer" autocomplete="username" style="background:#0f2030;border:1px solid rgba(255,96,0,.4);border-radius:4px;padding:8px 10px;color:#d8e8f0;font-family:var(--mono);font-size:13px;outline:none">
+      <input type="password" name="pass" placeholder="Passwort" autocomplete="current-password" style="background:#0f2030;border:1px solid rgba(255,96,0,.4);border-radius:4px;padding:8px 10px;color:#d8e8f0;font-family:var(--mono);font-size:13px;outline:none">
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="submit" style="flex:1;padding:9px;background:var(--orange);color:#000;border:none;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">ANMELDEN</button>
+        <button type="button" onclick="document.getElementById('loginModal').style.display='none'" style="padding:9px 14px;background:none;border:1px solid rgba(255,255,255,.2);color:#6a8fa8;border-radius:4px;font-family:var(--mono);font-size:12px;cursor:pointer">✕</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <?php else: ?>
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
