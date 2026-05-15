@@ -202,3 +202,35 @@ function rl_delete_user(string $id): bool {
     rl_save_users($new);
     return true;
 }
+
+// ── KRL Programme ──────────────────────────────────────────────────────────────
+
+function krl_init(): void {
+    foreach ([KRL_DIR, dirname(KRL_META_FILE)] as $d)
+        if (!is_dir($d)) mkdir($d, 0755, true);
+    if (!file_exists(KRL_META_FILE)) file_put_contents(KRL_META_FILE, '[]');
+    if (!file_exists(KRL_PTS_FILE))  file_put_contents(KRL_PTS_FILE,  '{}');
+}
+
+function krl_load(): array  { return json_decode(file_get_contents(KRL_META_FILE), true) ?? []; }
+function krl_save(array $d): void { file_put_contents(KRL_META_FILE, json_encode(array_values($d), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)); }
+
+function krl_pts_load(): array  { return json_decode(file_get_contents(KRL_PTS_FILE), true) ?? []; }
+function krl_pts_save(array $d): void { file_put_contents(KRL_PTS_FILE, json_encode($d)); }
+
+function krl_get_points(string $u): int {
+    krl_init();
+    $pts = krl_pts_load();
+    return $pts[$u]['points'] ?? 50;
+}
+
+function krl_add_points(string $u, int $delta): int {
+    krl_init();
+    $pts = krl_pts_load();
+    $cur = $pts[$u]['points'] ?? 50;
+    $pts[$u]['points']    = max(0, $cur + $delta);
+    $pts[$u]['uploads']   = ($pts[$u]['uploads']   ?? 0) + ($delta > 0 ? 1 : 0);
+    $pts[$u]['downloads'] = ($pts[$u]['downloads'] ?? 0) + ($delta < 0 ? 1 : 0);
+    krl_pts_save($pts);
+    return $pts[$u]['points'];
+}

@@ -440,9 +440,11 @@ footer a { color: var(--orange); text-decoration: none; }
       ⚙ ROBLIB<span>© CAD/CAM Systeme Datentechnik Reitz</span>
     </div>
     <nav class="header-nav">
-      <a href="index.php" class="active">BIBLIOTHEK</a>
+      <a href="index.php" <?= (!isset($_GET['tab'])||$_GET['tab']!=='krl')?'class="active"':'' ?>>BIBLIOTHEK</a>
+      <a href="index.php?tab=krl" <?= (($_GET['tab']??'')==='krl')?'class="active"':'' ?>>KRL PROGRAMME</a>
       <a href="https://cnc-technik.de/robsimul/robmodel/" target="_blank">ROBMODEL</a>
       <a href="https://cnc-technik.de/robsimul/" target="_blank">ROBSIMUL</a>
+      <a href="https://cnc-technik.de/kuka/" target="_blank">KRL EDITOR</a>
     </nav>
   </div>
   <div class="header-right">
@@ -463,6 +465,283 @@ footer a { color: var(--orange); text-decoration: none; }
   </div>
 </header>
 
+<?php if (($_GET['tab']??'') === 'krl'): ?>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!--  KRL PROGRAMME TAB                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <h1>KRL PROGRAMME</h1>
+  <p>Programme &amp; Snippets für den <strong style="color:var(--orange)">KRL Editor</strong> · Community-Bibliothek</p>
+</div>
+
+<div id="krlApp" style="max-width:1100px;margin:0 auto;padding:0 24px 40px">
+
+  <!-- Stats + User -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 18px;font-size:12px;color:var(--text-dim)">
+      <strong id="kStatTotal" style="display:block;font-size:22px;color:var(--text)">–</strong>Programme
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 18px;font-size:12px;color:var(--text-dim)">
+      <strong id="kStatPoints" style="display:block;font-size:22px;color:var(--orange)">–</strong>Deine Punkte
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 18px;font-size:12px;color:var(--text-dim)">
+      <strong id="kStatUploads" style="display:block;font-size:22px;color:var(--text)">–</strong>Deine Uploads
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span id="kUserLabel" style="font-family:var(--mono);font-size:12px;color:var(--text-dim)"></span>
+      <button onclick="kShowUpload()" style="background:rgba(255,96,0,.15);border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:.06em">
+        ↑ HOCHLADEN (+10 Punkte)
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" id="kSearch" placeholder="Suchen…" oninput="kApplyFilter()"
+      style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;min-width:200px">
+    <?php foreach([
+      ['','Alle'],['program','Programm'],['snippet','Snippet'],
+      ['function','Funktion'],['submit','Submit'],['interrupt','Interrupt'],['cell','Cell']
+    ] as [$v,$l]): ?>
+      <button class="kfl-btn" data-cat="<?=$v?>" onclick="kSetFilter('<?=$v?>')"
+        style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 12px;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:var(--mono)">
+        <?=$l?>
+      </button>
+    <?php endforeach; ?>
+  </div>
+
+  <div id="kGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"></div>
+  <div id="kEmpty" style="display:none;text-align:center;padding:60px;color:var(--text-dim);font-size:14px">
+    Noch keine Programme — lade das erste hoch!
+  </div>
+  <div id="kLoading" style="text-align:center;padding:40px;color:var(--text-dim)">Lädt…</div>
+</div>
+
+<!-- Upload Modal -->
+<div id="kUploadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:center;justify-content:center;z-index:300" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto">
+    <h2 style="font-family:var(--mono);color:var(--orange);margin-bottom:20px;font-size:15px">KRL HOCHLADEN</h2>
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">TITEL *</label>
+    <input id="kUpName" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="z.B. Schweißen Start-Sequenz">
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">KATEGORIE</label>
+    <select id="kUpCat" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px">
+      <option value="program">Programm (SRC+DAT)</option>
+      <option value="snippet">Snippet / Codefragment</option>
+      <option value="function">Funktion (DEFFCT)</option>
+      <option value="submit">Submit-Programm</option>
+      <option value="interrupt">Interrupt-Handler</option>
+      <option value="cell">Cell-Programm</option>
+    </select>
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">BESCHREIBUNG</label>
+    <input id="kUpDesc" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="Was macht dieses Programm?">
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">TAGS (kommagetrennt)</label>
+    <input id="kUpTags" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="schweissen, krc4, lin">
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">DATEINAME *</label>
+    <input id="kUpFilename" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="program.src">
+
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">KRL-CODE *</label>
+    <textarea id="kUpContent" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;min-height:150px;resize:vertical;font-family:monospace;margin-bottom:12px" placeholder="&ACCESS RVP&#10;&REL 1&#10;DEF MeinProgramm()&#10;..."></textarea>
+
+    <div id="kUpMsg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button onclick="document.getElementById('kUploadModal').style.display='none'"
+        style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:7px 16px;border-radius:4px;cursor:pointer;font-size:13px">Abbrechen</button>
+      <button onclick="kDoUpload()"
+        style="background:var(--orange);color:#000;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--mono)">
+        ↑ HOCHLADEN
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="kToast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 18px;font-size:13px;z-index:400;color:var(--text)"></div>
+
+<style>
+.kfl-btn.active { border-color:var(--orange)!important;color:var(--orange)!important; }
+.kcard { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s; }
+.kcard:hover { border-color:#334; }
+.kcat { font-size:10px;font-weight:700;border-radius:3px;padding:2px 7px;text-transform:uppercase;flex-shrink:0 }
+.kcat-program   { background:#F0A03022;color:#F0A030;border:1px solid #F0A03044 }
+.kcat-snippet   { background:#569CD622;color:#569CD6;border:1px solid #569CD644 }
+.kcat-function  { background:#C586C022;color:#C586C0;border:1px solid #C586C044 }
+.kcat-submit    { background:#4EC9B022;color:#4EC9B0;border:1px solid #4EC9B044 }
+.kcat-interrupt { background:#F8888822;color:#F88;border:1px solid #F8888844 }
+.kcat-cell      { background:#888;color:#000 }
+</style>
+
+<script>
+const KAPI = 'api.php';
+let kUser = '', kFilter = '', kPrograms = [];
+
+(function init() {
+  // User aus localStorage (vom KRL-Editor gesetzt) oder URL-Parameter
+  kUser = new URLSearchParams(location.search).get('krl_user')
+       || localStorage.getItem('krl_community_user') || '';
+  if (kUser) {
+    localStorage.setItem('krl_community_user', kUser);
+    document.getElementById('kUserLabel').textContent = '👤 ' + kUser;
+    kLoadPoints();
+  }
+  kLoadList();
+})();
+
+async function kLoadPoints() {
+  if (!kUser) return;
+  try {
+    const d = await (await fetch(`${KAPI}?action=krl_points&user=${encodeURIComponent(kUser)}`)).json();
+    if (d.ok) {
+      document.getElementById('kStatPoints').textContent  = d.points;
+      document.getElementById('kStatUploads').textContent = d.uploads ?? 0;
+    }
+  } catch(e){}
+}
+
+async function kLoadList() {
+  document.getElementById('kLoading').style.display = '';
+  document.getElementById('kGrid').innerHTML = '';
+  try {
+    const q = encodeURIComponent(document.getElementById('kSearch').value);
+    const r = await fetch(`${KAPI}?action=krl_list${kFilter?'&cat='+kFilter:''}${q?'&q='+q:''}`);
+    const d = await r.json();
+    kPrograms = d.programs ?? [];
+    document.getElementById('kStatTotal').textContent = d.total ?? kPrograms.length;
+    kRender(kPrograms);
+  } catch(e) {
+    document.getElementById('kEmpty').textContent = 'Fehler beim Laden';
+    document.getElementById('kEmpty').style.display = '';
+  }
+  document.getElementById('kLoading').style.display = 'none';
+}
+
+function kRender(progs) {
+  const grid = document.getElementById('kGrid');
+  grid.innerHTML = '';
+  document.getElementById('kEmpty').style.display = progs.length ? 'none' : '';
+  progs.forEach(p => grid.appendChild(kMakeCard(p)));
+}
+
+const kCatLabel = {program:'Programm',snippet:'Snippet',function:'Funktion',submit:'Submit',interrupt:'Interrupt',cell:'Cell'};
+
+function kMakeCard(p) {
+  const div = document.createElement('div');
+  div.className = 'kcard';
+  const tags = (p.tags||'').split(',').map(t=>t.trim()).filter(Boolean)
+    .map(t=>`<span style="background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 7px;font-size:10px;color:var(--text-dim)">${t}</span>`).join('');
+  const cost  = kUser && kUser!==p.author ? '<span style="color:var(--text-dim);font-size:11px">−20 Pkt</span>' : '';
+  const own   = kUser===p.author ? '<span style="color:#4EC9B0;font-size:10px">✓ Eigenes Upload</span>' : '';
+  const delBt = kUser===p.author
+    ? `<button onclick="kDelete('${p.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px">🗑</button>` : '';
+  const dt = p.date ? new Date(p.date*1000).toLocaleDateString('de-DE') : '';
+  div.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <span class="kcat kcat-${p.category}">${kCatLabel[p.category]||p.category}</span>
+      <span style="font-weight:600;font-size:14px;color:var(--text-bright);flex:1">${p.name}</span>
+    </div>
+    ${p.description?`<div style="font-size:12px;color:var(--text-dim);line-height:1.5">${p.description}</div>`:''}
+    ${tags?`<div style="display:flex;gap:4px;flex-wrap:wrap">${tags}</div>`:''}
+    <div style="display:flex;gap:10px;font-size:11px;color:var(--text-dim);flex-wrap:wrap;align-items:center">
+      <span>📄 ${p.filename}</span>
+      <span style="color:var(--blue)">👤 ${p.author}</span>
+      <span>📥 ${p.downloads}</span>
+      <span>${dt}</span>
+      ${own}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;align-items:center">
+      <button onclick="kLike('${p.id}',this)" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:3px">♥ ${p.likes||0}</button>
+      ${cost}
+      <button onclick="kDownload('${p.id}','${p.name}','${p.filename}')"
+        style="margin-left:auto;background:var(--orange);color:#000;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--mono)">
+        ↓ IN EDITOR LADEN
+      </button>
+      ${delBt}
+    </div>`;
+  return div;
+}
+
+function kSetFilter(cat) {
+  kFilter = cat;
+  document.querySelectorAll('.kfl-btn').forEach(b => b.classList.toggle('active', b.dataset.cat===cat));
+  kLoadList();
+}
+
+function kApplyFilter() {
+  clearTimeout(window._kt);
+  window._kt = setTimeout(kLoadList, 300);
+}
+
+async function kDownload(id, name, filename) {
+  if (!kUser) { alert('Bitte zuerst im KRL Editor anmelden, dann über den Community-Button hierher kommen.'); return; }
+  try {
+    const r = await fetch(`${KAPI}?action=krl_download&id=${id}&user=${encodeURIComponent(kUser)}`);
+    const d = await r.json();
+    if (!d.ok) { kToast('❌ ' + (d.error||'Fehler')); return; }
+    localStorage.setItem('krl_community_load', JSON.stringify({ name: d.filename, content: d.content, from: d.name }));
+    if (d.points!==null && d.points!==undefined) document.getElementById('kStatPoints').textContent = d.points;
+    kToast(`✓ "${name}" bereit — wechsle zum KRL Editor`);
+    if (confirm(`"${name}" wurde geladen.\n\nJetzt zum KRL Editor wechseln?`))
+      window.location.href = 'https://cnc-technik.de/kuka/';
+  } catch(e) { kToast('❌ Netzwerkfehler'); }
+}
+
+function kShowUpload() {
+  if (!kUser) { alert('Bitte zuerst im KRL Editor anmelden.'); return; }
+  document.getElementById('kUploadModal').style.display = 'flex';
+}
+
+async function kDoUpload() {
+  const name     = document.getElementById('kUpName').value.trim();
+  const category = document.getElementById('kUpCat').value;
+  const desc     = document.getElementById('kUpDesc').value.trim();
+  const tags     = document.getElementById('kUpTags').value.trim();
+  const filename = document.getElementById('kUpFilename').value.trim();
+  const content  = document.getElementById('kUpContent').value.trim();
+  const msg      = document.getElementById('kUpMsg');
+  if (!name||!filename||!content) { msg.innerHTML='<div style="background:#2A1A1A;border:1px solid #5A2A2A;padding:8px 12px;border-radius:4px;color:#F88;font-size:12px">Pflichtfelder ausfüllen</div>'; return; }
+  try {
+    const r = await fetch(`${KAPI}?action=krl_upload`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user:kUser, name, description:desc, category, filename, content, tags})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      msg.innerHTML = `<div style="background:#1A2A1A;border:1px solid #2A5A2A;padding:8px 12px;border-radius:4px;color:#4EC9B0;font-size:12px">✓ Hochgeladen! Du hast jetzt ${d.points} Punkte.</div>`;
+      document.getElementById('kStatPoints').textContent = d.points;
+      setTimeout(() => { document.getElementById('kUploadModal').style.display='none'; kLoadList(); }, 1500);
+    } else {
+      msg.innerHTML = `<div style="background:#2A1A1A;border:1px solid #5A2A2A;padding:8px 12px;border-radius:4px;color:#F88;font-size:12px">❌ ${d.error}</div>`;
+    }
+  } catch(e) { msg.innerHTML = '<div style="color:#F88;font-size:12px">❌ Netzwerkfehler</div>'; }
+}
+
+async function kLike(id, btn) {
+  await fetch(`${KAPI}?action=krl_like&id=${id}`);
+  btn.textContent = '♥ ' + (parseInt(btn.textContent.replace('♥ ',''))+1);
+}
+
+async function kDelete(id) {
+  if (!confirm('Programm wirklich löschen?')) return;
+  const r = await fetch(`${KAPI}?action=krl_delete&id=${id}&user=${encodeURIComponent(kUser)}`);
+  const d = await r.json();
+  d.ok ? (kToast('✓ Gelöscht'), kLoadList()) : kToast('❌ ' + (d.error||'Fehler'));
+}
+
+function kToast(msg, dur=3500) {
+  const t = document.getElementById('kToast');
+  t.textContent = msg; t.style.display = '';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.display='none', dur);
+}
+</script>
+
+<?php else: ?>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!--  EXISTING ROBOT LIBRARY (unchanged)                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="hero">
   <h1>ROBOTERBIBLIOTHEK</h1>
   <p>
@@ -1191,5 +1470,6 @@ async function umDoUpload() {
   }
 }
 </script>
+<?php endif; ?>
 </body>
 </html>

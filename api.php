@@ -186,6 +186,120 @@ case 'delete_user':
     if (!rl_delete_user($id)) api_error(404, 'Benutzer nicht gefunden.');
     api_json(['ok' => true, 'deleted' => $id]);
 
+// ── KRL_LIST ─────────────────────────────────────────────────
+case 'krl_list':
+    krl_init();
+    $progs = krl_load();
+    $cat = $_GET['cat'] ?? '';
+    $q   = strtolower($_GET['q'] ?? '');
+    if ($cat) $progs = array_values(array_filter($progs, fn($p) => ($p['category']??'') === $cat));
+    if ($q)   $progs = array_values(array_filter($progs, fn($p) =>
+        str_contains(strtolower($p['name']??''), $q) ||
+        str_contains(strtolower($p['description']??''), $q) ||
+        str_contains(strtolower($p['author']??''), $q) ||
+        str_contains(strtolower($p['tags']??''), $q)
+    ));
+    usort($progs, fn($a,$b) => ($b['date']??0)-($a['date']??0));
+    api_json(['ok'=>true,'programs'=>$progs,'total'=>count($progs)]);
+
+// ── KRL_POINTS ───────────────────────────────────────────────
+case 'krl_points':
+    krl_init();
+    $u = $_GET['user'] ?? $_POST['user'] ?? '';
+    if (!$u) api_error(400,'Kein Benutzer');
+    $pts = krl_pts_load();
+    api_json([
+        'ok'        => true,
+        'user'      => $u,
+        'points'    => $pts[$u]['points']    ?? 50,
+        'uploads'   => $pts[$u]['uploads']   ?? 0,
+        'downloads' => $pts[$u]['downloads'] ?? 0,
+    ]);
+
+// ── KRL_UPLOAD ───────────────────────────────────────────────
+case 'krl_upload':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') api_error(405,'POST erforderlich.');
+    krl_init();
+    $b        = json_decode(file_get_contents('php://input'), true) ?? [];
+    $user     = trim($b['user']        ?? '');
+    $name     = trim($b['name']        ?? '');
+    $desc     = trim($b['description'] ?? '');
+    $content  = $b['content']  ?? '';
+    $filename = preg_replace('/[^a-zA-Z0-9._-]/','_', trim($b['filename']??'program.src'));
+    $category = in_array($b['category']??'',['snippet','program','function','submit','interrupt','cell'])
+                ? $b['category'] : 'program';
+    $tags     = trim($b['tags'] ?? '');
+    if (!$user||!$name||!$content||!$filename) api_error(400,'Pflichtfelder fehlen');
+    if (strlen($content)>500000) api_error(400,'Datei zu groß (max 500 KB)');
+
+    $id  = 'krl_'.bin2hex(random_bytes(6));
+    $dir = KRL_DIR.$id;
+    mkdir($dir,0755,true);
+    file_put_contents($dir.'/'.$filename, $content);
+
+    $progs = krl_load();
+    $progs[] = [
+        'id'          => $id,
+        'name'        => htmlspecialchars($name),
+        'description' => htmlspecialchars($desc),
+        'category'    => $category,
+        'filename'    => $filename,
+        'tags'        => htmlspecialchars($tags),
+        'author'      => htmlspecialchars($user),
+        'date'        => time(),
+        'downloads'   => 0,
+        'likes'       => 0,
+        'size'        => strlen($content),
+    ];
+    krl_save($progs);
+    $newPts = krl_add_points($user, 10);
+    api_json(['ok'=>true,'id'=>$id,'points'=>$newPts]);
+
+// ── KRL_DOWNLOAD ─────────────────────────────────────────────
+case 'krl_download':
+    krl_init();
+    $id   = $_GET['id']   ?? '';
+    $user = $_GET['user'] ?? '';
+    $progs = krl_load();
+    $idx = -1;
+    foreach ($progs as $i=>$p) { if ($p['id']===$id) { $idx=$i; break; } }
+    if ($idx<0) api_error(404,'Nicht gefunden');
+    $prog = $progs[$idx];
+    $path = KRL_DIR.$id.'/'.$prog['filename'];
+    if (!file_exists($path)) api_error(404,'Datei fehlt');
+    $content = file_get_contents($path);
+    $newPts  = null;
+    if ($user && $user !== $prog['author']) {
+        if (krl_get_points($user) < 20) api_error(403,'Nicht genug Punkte (benötigt: 20, vorhanden: '.krl_get_points($user).')');
+        $newPts = krl_add_points($user, -20);
+    }
+    $progs[$idx]['downloads']++;
+    krl_save($progs);
+    api_json(['ok'=>true,'content'=>$content,'filename'=>$prog['filename'],'name'=>$prog['name'],'points'=>$newPts]);
+
+// ── KRL_LIKE ─────────────────────────────────────────────────
+case 'krl_like':
+    krl_init();
+    $id = $_GET['id']??'';
+    $progs = krl_load();
+    foreach ($progs as &$p) { if ($p['id']===$id) { $p['likes']=($p['likes']??0)+1; break; } }
+    krl_save($progs);
+    api_json(['ok'=>true]);
+
+// ── KRL_DELETE ───────────────────────────────────────────────
+case 'krl_delete':
+    krl_init();
+    $id   = $_GET['id']   ?? '';
+    $user = $_GET['user'] ?? '';
+    $progs = krl_load();
+    foreach ($progs as $i=>$p) {
+        if ($p['id']===$id && $p['author']===$user) {
+            array_splice($progs,$i,1); krl_save($progs);
+            api_json(['ok'=>true]);
+        }
+    }
+    api_error(403,'Nicht berechtigt');
+
 // ── UNKNOWN ─────────────────────────────────────────────────
 default:
     api_error(400, "Unbekannte Action: $action");
