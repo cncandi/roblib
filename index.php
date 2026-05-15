@@ -541,6 +541,14 @@ footer a { color: var(--orange); text-decoration: none; }
     <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">TAGS (kommagetrennt)</label>
     <input id="kUpTags" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="schweissen, krc4, lin">
 
+    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:16px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px">
+      <input type="checkbox" id="kUpPrivate" style="margin-top:2px;flex-shrink:0">
+      <div>
+        <div style="font-size:12px;color:var(--text);font-weight:600">🔒 Privat speichern</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Nur für dich sichtbar. Kostet <strong style="color:#F88">5 Punkte</strong> statt +10.</div>
+      </div>
+    </label>
+
     <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-family:var(--mono)">DATEINAME *</label>
     <input id="kUpFilename" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px" placeholder="program.src">
 
@@ -634,6 +642,7 @@ function kMakeCard(p) {
     .map(t=>`<span style="background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 7px;font-size:10px;color:var(--text-dim)">${t}</span>`).join('');
   const cost  = kUser && kUser!==p.author ? '<span style="color:var(--text-dim);font-size:11px">−20 Pkt</span>' : '';
   const own   = kUser===p.author ? '<span style="color:#4EC9B0;font-size:10px">✓ Eigenes Upload</span>' : '';
+  const priv  = p.private ? '<span style="color:#F0A030;font-size:10px">🔒 Privat</span>' : '';
   const delBt = kUser===p.author
     ? `<button onclick="kDelete('${p.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px">🗑</button>` : '';
   const dt = p.date ? new Date(p.date*1000).toLocaleDateString('de-DE') : '';
@@ -649,7 +658,7 @@ function kMakeCard(p) {
       <span style="color:var(--blue)">👤 ${p.author}</span>
       <span>📥 ${p.downloads}</span>
       <span>${dt}</span>
-      ${own}
+      ${own}${priv}
     </div>
     <div style="display:flex;gap:8px;margin-top:4px;align-items:center">
       <button onclick="kLike('${p.id}',this)" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:3px">♥ ${p.likes||0}</button>
@@ -705,11 +714,13 @@ async function kDoUpload() {
   try {
     const r = await fetch(`${KAPI}?action=krl_upload`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user:kUser, name, description:desc, category, filename, content, tags})
+      body: JSON.stringify({user:kUser, name, description:desc, category, filename, content, tags,
+        private: document.getElementById('kUpPrivate').checked})
     });
     const d = await r.json();
     if (d.ok) {
-      msg.innerHTML = `<div style="background:#1A2A1A;border:1px solid #2A5A2A;padding:8px 12px;border-radius:4px;color:#4EC9B0;font-size:12px">✓ Hochgeladen! Du hast jetzt ${d.points} Punkte.</div>`;
+      const ptsTxt = d.private ? `Privat gespeichert. Du hast jetzt ${d.points} Punkte.` : `Hochgeladen! Du hast jetzt ${d.points} Punkte.`;
+      msg.innerHTML = `<div style="background:#1A2A1A;border:1px solid #2A5A2A;padding:8px 12px;border-radius:4px;color:#4EC9B0;font-size:12px">✓ ${ptsTxt}</div>`;
       document.getElementById('kStatPoints').textContent = d.points;
       setTimeout(() => { document.getElementById('kUploadModal').style.display='none'; kLoadList(); }, 1500);
     } else {

@@ -190,8 +190,13 @@ case 'delete_user':
 case 'krl_list':
     krl_init();
     $progs = krl_load();
-    $cat = $_GET['cat'] ?? '';
-    $q   = strtolower($_GET['q'] ?? '');
+    $cat      = $_GET['cat']  ?? '';
+    $q        = strtolower($_GET['q'] ?? '');
+    $reqUser  = $_GET['user'] ?? '';
+    // Private Programme nur für den Eigentümer sichtbar
+    $progs = array_values(array_filter($progs, fn($p) =>
+        empty($p['private']) || ($p['author'] === $reqUser)
+    ));
     if ($cat) $progs = array_values(array_filter($progs, fn($p) => ($p['category']??'') === $cat));
     if ($q)   $progs = array_values(array_filter($progs, fn($p) =>
         str_contains(strtolower($p['name']??''), $q) ||
@@ -229,8 +234,12 @@ case 'krl_upload':
     $category = in_array($b['category']??'',['snippet','program','function','submit','interrupt','cell'])
                 ? $b['category'] : 'program';
     $tags     = trim($b['tags'] ?? '');
+    $private  = !empty($b['private']);
     if (!$user||!$name||!$content||!$filename) api_error(400,'Pflichtfelder fehlen');
     if (strlen($content)>500000) api_error(400,'Datei zu groß (max 500 KB)');
+
+    // Punkte prüfen bei privatem Upload
+    if ($private && krl_get_points($user) < 5) api_error(403,'Nicht genug Punkte für privaten Upload (benötigt: 5)');
 
     $id  = 'krl_'.bin2hex(random_bytes(6));
     $dir = KRL_DIR.$id;
@@ -250,10 +259,12 @@ case 'krl_upload':
         'downloads'   => 0,
         'likes'       => 0,
         'size'        => strlen($content),
+        'private'     => $private,
     ];
     krl_save($progs);
-    $newPts = krl_add_points($user, 10);
-    api_json(['ok'=>true,'id'=>$id,'points'=>$newPts]);
+    // Öffentlich: +10 Punkte, Privat: -5 Punkte
+    $newPts = krl_add_points($user, $private ? -5 : 10);
+    api_json(['ok'=>true,'id'=>$id,'points'=>$newPts,'private'=>$private]);
 
 // ── KRL_DOWNLOAD ─────────────────────────────────────────────
 case 'krl_download':
