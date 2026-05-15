@@ -338,11 +338,13 @@ case 'krl_like':
 // ── KRL_DELETE ───────────────────────────────────────────────
 case 'krl_delete':
     krl_init();
-    $id   = $_GET['id']   ?? '';
-    $user = $_GET['user'] ?? '';
+    $id        = $_GET['id']        ?? '';
+    $user      = $_GET['user']      ?? '';
+    $admin_p   = $_GET['admin_pass'] ?? '';
+    $isAdmin   = rl_check_auth('admin', $admin_p);
     $progs = krl_load();
     foreach ($progs as $i=>$p) {
-        if ($p['id']===$id && $p['author']===$user) {
+        if ($p['id']===$id && ($p['author']===$user || $isAdmin)) {
             array_splice($progs,$i,1); krl_save($progs);
             api_json(['ok'=>true]);
         }

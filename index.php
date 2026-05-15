@@ -648,7 +648,7 @@ function kMakeCard(p) {
   const cost  = kUser && kUser!==p.author ? '<span style="color:var(--text-dim);font-size:11px">−20 Pkt</span>' : '';
   const own   = kUser===p.author ? '<span style="color:#4EC9B0;font-size:10px">✓ Eigenes Upload</span>' : '';
   const priv  = p.private ? '<span style="color:#F0A030;font-size:10px">🔒 Privat</span>' : '';
-  const delBt = kUser===p.author
+  const delBt = (kUser===p.author || kIsAdmin)
     ? `<button onclick="kDelete('${p.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px">🗑</button>` : '';
   const dt = p.date ? new Date(p.date*1000).toLocaleDateString('de-DE') : '';
   const preview = (p.preview||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -744,7 +744,8 @@ async function kLike(id, btn) {
 
 async function kDelete(id) {
   if (!confirm('Programm wirklich löschen?')) return;
-  const r = await fetch(`${KAPI}?action=krl_delete&id=${id}&user=${encodeURIComponent(kUser)}`);
+  const adminParam = kIsAdmin ? `&admin_pass=${encodeURIComponent(KAPI_ADMIN_PASS)}` : '';
+  const r = await fetch(`${KAPI}?action=krl_delete&id=${id}&user=${encodeURIComponent(kUser)}${adminParam}`);
   const d = await r.json();
   d.ok ? (kToast('✓ Gelöscht'), kLoadList()) : kToast('❌ ' + (d.error||'Fehler'));
 }
@@ -824,6 +825,8 @@ function kToast(msg, dur=3500) {
 
 <script>
 const KAPI_ADMIN_PASS = '<?= addslashes(ROBLIB_USERS['admin'] ?? '') ?>';
+const kIsAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
+
 async function kShowPointsAdmin() {
   document.getElementById('kPtsModal').style.display = 'flex';
   const r = await fetch(`${KAPI}?action=krl_users&admin_user=admin&admin_pass=${encodeURIComponent(KAPI_ADMIN_PASS)}`);
