@@ -297,6 +297,17 @@ case 'krl_download':
     krl_save($progs);
     api_json(['ok'=>true,'content'=>$content,'filename'=>$prog['filename'],'name'=>$prog['name'],'points'=>$newPts]);
 
+// ── KRL_LEADERBOARD ──────────────────────────────────────────
+case 'krl_leaderboard':
+    krl_init();
+    $pts  = krl_pts_load();
+    $list = [];
+    foreach ($pts as $name => $data) {
+        $list[] = ['user'=>$name, 'points'=>$data['points']??50];
+    }
+    usort($list, fn($a,$b) => $b['points']-$a['points']);
+    api_json(['ok'=>true, 'leaderboard'=>array_slice($list, 0, 10)]);
+
 // ── KRL_SET_POINTS (Admin) ────────────────────────────────────
 case 'krl_set_points':
     krl_init();

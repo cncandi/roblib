@@ -498,7 +498,13 @@ footer a { color: var(--orange); text-decoration: none; }
     </div>
   </div>
 
-  <!-- Filter -->
+  <!-- Rangliste -->
+  <div id="kRanking" style="margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 18px">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px;letter-spacing:.06em">🏆 RANGLISTE</div>
+    <div id="kRankList" style="display:flex;gap:8px;flex-wrap:wrap">
+      <span style="color:var(--text-dim);font-size:12px">Lädt…</span>
+    </div>
+  </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
     <input type="text" id="kSearch" placeholder="Suchen…" oninput="kApplyFilter()"
       style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;min-width:200px">
@@ -601,6 +607,7 @@ let kUser = '', kFilter = '', kPrograms = [];
     kLoadPoints();
   }
   kLoadList();
+  kLoadLeaderboard();
 })();
 
 async function kLoadPoints() {
@@ -612,6 +619,22 @@ async function kLoadPoints() {
       document.getElementById('kStatUploads').textContent = d.uploads ?? 0;
     }
   } catch(e){}
+}
+
+async function kLoadLeaderboard() {
+  try {
+    const d = await (await fetch(`${KAPI}?action=krl_leaderboard`)).json();
+    if (!d.ok) return;
+    const medals = ['🥇','🥈','🥉'];
+    document.getElementById('kRankList').innerHTML = d.leaderboard.map((u,i) => {
+      const isMe = u.user === kUser;
+      return `<div style="display:flex;align-items:center;gap:6px;background:${isMe?'rgba(255,96,0,.12)':'var(--bg3)'};border:1px solid ${isMe?'rgba(255,96,0,.4)':'var(--border)'};border-radius:4px;padding:5px 10px;font-size:12px">
+        <span style="font-size:14px">${medals[i]||'#'+(i+1)}</span>
+        <span style="color:${isMe?'var(--orange)':'var(--text)'};font-weight:${isMe?700:400}">${u.user}</span>
+        <span style="color:var(--orange);font-family:var(--mono);font-size:11px">★ ${u.points}</span>
+      </div>`;
+    }).join('') || '<span style="color:var(--text-dim);font-size:12px">Noch keine Einträge</span>';
+  } catch(e) {}
 }
 
 async function kLoadList() {
