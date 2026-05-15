@@ -1238,121 +1238,6 @@ function doLogin() {
   });
 }
 
-function openUserManager() {
-  document.getElementById('userMgrOverlay').style.display = 'flex';
-  loadUsers();
-}
-
-var _editUserId = null;
-var _allRobots = [];
-
-function switchTab(tab) {
-  ['robots','users'].forEach(function(t) {
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
-    document.querySelectorAll('.tab-btn').forEach(function(b,i) {
-      b.classList.toggle('active', (i===0&&tab==='robots')||(i===1&&tab==='users'));
-    });
-  });
-  if (tab === 'users') loadUsers();
-}
-
-function getAdminPass() {
-  if (_adminPass) return _adminPass;
-  _adminPass = prompt('Admin-Passwort:');
-  return _adminPass;
-}
-
-function loadUsers() {
-  var fd = new FormData();
-  fd.append('action','list_users'); fd.append('session','1');
-  fetch('api.php', {method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
-    if (!d.ok) { document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+d.error+'</td></tr>'; return; }
-    fetch('api.php?action=list').then(r=>r.json()).then(function(rd) { _allRobots = rd.robots || []; });
-    renderUsers(d.users);
-  }).catch(function(e){
-    document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+e.message+'</td></tr>';
-  });
-}
-
-function renderUsers(users) {
-  var tbody = document.getElementById('usrBody');
-  if (!users.length) { tbody.innerHTML='<tr><td colspan="3" style="color:#6a8fa8">Keine Benutzer.</td></tr>'; return; }
-  tbody.innerHTML = users.map(function(u) {
-    var rCount = (u.robots||[]).length;
-    var safeId   = (u.id||'').replace(/"/g,'');
-    var safeName = (u.username||'').replace(/"/g,'');
-    return '<tr><td>'+safeName+'</td><td style="color:#6a8fa8">'+rCount+' Roboter</td><td style="white-space:nowrap">' +
-      '<button class="btn-sm btn-sm-edit" data-u="'+encodeURIComponent(JSON.stringify(u))+'" onclick="openEditUser(JSON.parse(decodeURIComponent(this.dataset.u)))">&#x270E;</button> ' +
-      '<button class="btn-sm btn-sm-del" data-id="'+safeId+'" data-name="'+safeName+'" onclick="deleteUser(this.dataset.id,this.dataset.name)">&#x2715;</button>' +
-      '</td></tr>';
-  }).join('');
-}
-
-function openAddUser() {
-  _editUserId = null;
-  document.getElementById('userModalTitle').textContent = 'BENUTZER HINZUFÜGEN';
-  document.getElementById('um-user').value = '';
-  document.getElementById('um-pass').value = '';
-  document.getElementById('um-msg').style.display = 'none';
-  buildRobotChecks([]);
-  document.getElementById('userModal').style.display = 'flex';
-}
-
-function openEditUser(u) {
-  _editUserId = u.id;
-  document.getElementById('userModalTitle').textContent = 'BENUTZER BEARBEITEN';
-  document.getElementById('um-user').value = u.username;
-  document.getElementById('um-pass').value = '';
-  document.getElementById('um-msg').style.display = 'none';
-  buildRobotChecks(u.robots || []);
-  document.getElementById('userModal').style.display = 'flex';
-}
-
-function buildRobotChecks(selected) {
-  var grid = document.getElementById('um-robots');
-  if (!_allRobots.length) {
-    grid.innerHTML = '<span style="color:#6a8fa8;font-family:var(--mono);font-size:11px">Keine Roboter vorhanden.</span>';
-    return;
-  }
-  grid.innerHTML = _allRobots.map(function(r) {
-    var checked = selected.indexOf(r.id) >= 0 ? 'checked' : '';
-    return '<label class="robot-check-item"><input type="checkbox" value="'+r.id+'" '+checked+'> '+r.name+'</label>';
-  }).join('');
-}
-
-function saveUser() {
-  var btn = document.getElementById('um-save');
-  var msg = document.getElementById('um-msg');
-  var robots = Array.from(document.querySelectorAll('#um-robots input:checked')).map(function(c){return c.value;});
-  var fd = new FormData();
-  fd.append('session','1');
-  fd.append('username', document.getElementById('um-user').value);
-  var pw = document.getElementById('um-pass').value;
-  if (pw) fd.append('password', pw);
-  fd.append('robots', JSON.stringify(robots));
-  if (_editUserId) {
-    fd.append('action','update_user'); fd.append('id',_editUserId);
-  } else {
-    fd.append('action','add_user');
-    if (!pw) { msg.textContent='Passwort erforderlich.'; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; return; }
-  }
-  btn.disabled=true; btn.textContent='Speichern...';
-  fetch('api.php',{method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
-    btn.disabled=false; btn.textContent='SPEICHERN';
-    if (d.ok) { document.getElementById('userModal').style.display='none'; loadUsers(); }
-    else { msg.textContent='Fehler: '+d.error; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; }
-  });
-}
-
-function deleteUser(id, name) {
-  if (!confirm('Benutzer «'+name+'» löschen?')) return;
-  var fd = new FormData();
-  fd.append('action','delete_user'); fd.append('id',id); fd.append('session','1');
-  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
-    if (d.ok) loadUsers();
-    else alert('Fehler: '+d.error);
-  });
-}
 </script>
 
 <div id="thumbZoom"><img id="thumbZoomImg" src="" alt=""></div>
@@ -1389,22 +1274,6 @@ function deleteUser(id, name) {
 </script>
 
 <!-- User Manager Overlay -->
-<div id="userMgrOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px">
-  <div style="background:#0d1a26;border:1px solid rgba(255,96,0,.4);border-radius:8px;width:min(820px,100%);padding:24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <span style="font-family:var(--mono);font-size:14px;color:var(--orange);letter-spacing:.06em">BENUTZERVERWALTUNG</span>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="btn-sm btn-sm-add" onclick="openAddUser()">+ BENUTZER</button>
-        <button onclick="document.getElementById('userMgrOverlay').style.display='none'"
-          style="background:none;border:none;color:#6a8fa8;font-size:20px;cursor:pointer;line-height:1">&#x2715;</button>
-      </div>
-    </div>
-    <table class="usr-table" id="usrTable">
-      <thead><tr><th>BENUTZER</th><th>ROBOTER</th><th>AKTIONEN</th></tr></thead>
-      <tbody id="usrBody"><tr><td colspan="3" style="color:#6a8fa8">Lade…</td></tr></tbody>
-    </table>
-  </div>
-</div>
 
 <style id="rl-theme-style"></style>
 <script>
@@ -1589,5 +1458,143 @@ async function umDoUpload() {
 }
 </script>
 <?php endif; ?>
+
+<!-- Benutzer-Manager (global — beide Tabs) -->
+<div id="userMgrOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px">
+  <div style="background:#0d1a26;border:1px solid rgba(255,96,0,.4);border-radius:8px;width:min(820px,100%);padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <span style="font-family:var(--mono);font-size:14px;color:var(--orange);letter-spacing:.06em">BENUTZERVERWALTUNG</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-sm btn-sm-add" onclick="openAddUser()">+ BENUTZER</button>
+        <button onclick="document.getElementById('userMgrOverlay').style.display='none'"
+          style="background:none;border:none;color:#6a8fa8;font-size:20px;cursor:pointer;line-height:1">&#x2715;</button>
+      </div>
+    </div>
+    <table class="usr-table" id="usrTable">
+      <thead><tr><th>BENUTZER</th><th>ROBOTER</th><th>AKTIONEN</th></tr></thead>
+      <tbody id="usrBody"><tr><td colspan="3" style="color:#6a8fa8">Lade…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+
+function openUserManager() {
+  document.getElementById('userMgrOverlay').style.display = 'flex';
+  loadUsers();
+}
+
+var _editUserId = null;
+var _allRobots = [];
+
+function switchTab(tab) {
+  ['robots','users'].forEach(function(t) {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.querySelectorAll('.tab-btn').forEach(function(b,i) {
+      b.classList.toggle('active', (i===0&&tab==='robots')||(i===1&&tab==='users'));
+    });
+  });
+  if (tab === 'users') loadUsers();
+}
+
+function getAdminPass() {
+  if (_adminPass) return _adminPass;
+  _adminPass = prompt('Admin-Passwort:');
+  return _adminPass;
+}
+
+function loadUsers() {
+  var fd = new FormData();
+  fd.append('action','list_users'); fd.append('session','1');
+  fetch('api.php', {method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
+    if (!d.ok) { document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+d.error+'</td></tr>'; return; }
+    fetch('api.php?action=list').then(r=>r.json()).then(function(rd) { _allRobots = rd.robots || []; });
+    renderUsers(d.users);
+  }).catch(function(e){
+    document.getElementById('usrBody').innerHTML='<tr><td colspan="3" style="color:#f87171">'+e.message+'</td></tr>';
+  });
+}
+
+function renderUsers(users) {
+  var tbody = document.getElementById('usrBody');
+  if (!users.length) { tbody.innerHTML='<tr><td colspan="3" style="color:#6a8fa8">Keine Benutzer.</td></tr>'; return; }
+  tbody.innerHTML = users.map(function(u) {
+    var rCount = (u.robots||[]).length;
+    var safeId   = (u.id||'').replace(/"/g,'');
+    var safeName = (u.username||'').replace(/"/g,'');
+    return '<tr><td>'+safeName+'</td><td style="color:#6a8fa8">'+rCount+' Roboter</td><td style="white-space:nowrap">' +
+      '<button class="btn-sm btn-sm-edit" data-u="'+encodeURIComponent(JSON.stringify(u))+'" onclick="openEditUser(JSON.parse(decodeURIComponent(this.dataset.u)))">&#x270E;</button> ' +
+      '<button class="btn-sm btn-sm-del" data-id="'+safeId+'" data-name="'+safeName+'" onclick="deleteUser(this.dataset.id,this.dataset.name)">&#x2715;</button>' +
+      '</td></tr>';
+  }).join('');
+}
+
+function openAddUser() {
+  _editUserId = null;
+  document.getElementById('userModalTitle').textContent = 'BENUTZER HINZUFÜGEN';
+  document.getElementById('um-user').value = '';
+  document.getElementById('um-pass').value = '';
+  document.getElementById('um-msg').style.display = 'none';
+  buildRobotChecks([]);
+  document.getElementById('userModal').style.display = 'flex';
+}
+
+function openEditUser(u) {
+  _editUserId = u.id;
+  document.getElementById('userModalTitle').textContent = 'BENUTZER BEARBEITEN';
+  document.getElementById('um-user').value = u.username;
+  document.getElementById('um-pass').value = '';
+  document.getElementById('um-msg').style.display = 'none';
+  buildRobotChecks(u.robots || []);
+  document.getElementById('userModal').style.display = 'flex';
+}
+
+function buildRobotChecks(selected) {
+  var grid = document.getElementById('um-robots');
+  if (!_allRobots.length) {
+    grid.innerHTML = '<span style="color:#6a8fa8;font-family:var(--mono);font-size:11px">Keine Roboter vorhanden.</span>';
+    return;
+  }
+  grid.innerHTML = _allRobots.map(function(r) {
+    var checked = selected.indexOf(r.id) >= 0 ? 'checked' : '';
+    return '<label class="robot-check-item"><input type="checkbox" value="'+r.id+'" '+checked+'> '+r.name+'</label>';
+  }).join('');
+}
+
+function saveUser() {
+  var btn = document.getElementById('um-save');
+  var msg = document.getElementById('um-msg');
+  var robots = Array.from(document.querySelectorAll('#um-robots input:checked')).map(function(c){return c.value;});
+  var fd = new FormData();
+  fd.append('session','1');
+  fd.append('username', document.getElementById('um-user').value);
+  var pw = document.getElementById('um-pass').value;
+  if (pw) fd.append('password', pw);
+  fd.append('robots', JSON.stringify(robots));
+  if (_editUserId) {
+    fd.append('action','update_user'); fd.append('id',_editUserId);
+  } else {
+    fd.append('action','add_user');
+    if (!pw) { msg.textContent='Passwort erforderlich.'; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; return; }
+  }
+  btn.disabled=true; btn.textContent='Speichern...';
+  fetch('api.php',{method:'POST',body:fd,credentials:'same-origin'}).then(r=>r.json()).then(function(d) {
+    btn.disabled=false; btn.textContent='SPEICHERN';
+    if (d.ok) { document.getElementById('userModal').style.display='none'; loadUsers(); }
+    else { msg.textContent='Fehler: '+d.error; msg.style.cssText='display:block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:8px;font-family:var(--mono);font-size:12px;margin-top:12px'; }
+  });
+}
+
+function deleteUser(id, name) {
+  if (!confirm('Benutzer «'+name+'» löschen?')) return;
+  var fd = new FormData();
+  fd.append('action','delete_user'); fd.append('id',id); fd.append('session','1');
+  fetch('api.php',{method:'POST',body:fd}).then(r=>r.json()).then(function(d) {
+    if (d.ok) loadUsers();
+    else alert('Fehler: '+d.error);
+  });
+}
+
+</script>
 </body>
 </html>
