@@ -1078,12 +1078,9 @@ filterCards();
 function rlDelete(btn){
   var name=btn.getAttribute('data-name');
   var id=btn.getAttribute('data-id');
-  if(!confirm('Roboter '+name+' wirklich löschen?'))return;
-  var pass=prompt('Admin-Passwort:');
-  if(pass===null)return;
+  if(!confirm(name+' wirklich löschen?'))return;
   var fd=new FormData();
   fd.append('action','delete');fd.append('id',id);
-  fd.append('user','admin');fd.append('pass',pass);
   fetch('api.php',{method:'POST',body:fd})
     .then(function(r){return r.json();})
     .then(function(d){if(d.ok)location.reload();else alert('Fehler: '+d.error);})
