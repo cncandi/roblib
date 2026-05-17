@@ -24,8 +24,12 @@ if (!rl_session_auth() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
 // ── Delete POST ───────────────────────────────────────────────
 if (rl_session_auth() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $id = preg_replace('/[^a-f0-9]/', '', $_POST['id'] ?? '');
-    if ($id && rl_delete_robot($id)) {
-        $success = 'Roboter gelöscht.';
+    $confirmPass = $_POST['confirm_pass'] ?? '';
+    $currentUser = $_SESSION['rl_user'] ?? 'admin';
+    if (!rl_check_auth($currentUser, $confirmPass)) {
+        $error = 'Falsches Passwort – Löschen abgebrochen.';
+    } elseif ($id && rl_delete_robot($id)) {
+        $success = 'Objekt gelöscht.';
     } else {
         $error = 'Löschen fehlgeschlagen.';
     }
@@ -299,11 +303,8 @@ textarea { resize: vertical; min-height: 60px; }
           <td class="dim"><?= $r['reichweite_mm'] ?> mm</td>
           <td class="dim"><?= substr($r['created'] ?? '', 0, 10) ?></td>
           <td>
-            <form method="post" onsubmit="return confirm('Wirklich löschen?')">
-              <input type="hidden" name="action" value="delete">
-              <input type="hidden" name="id" value="<?= htmlspecialchars($r['id']) ?>">
-              <button class="btn btn-danger" type="submit" style="padding:4px 10px;font-size:10px">LÖSCHEN</button>
-            </form>
+            <button class="btn btn-danger" type="button" style="padding:4px 10px;font-size:10px"
+              onclick="openDeleteModal('<?= htmlspecialchars($r['id']) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">LÖSCHEN</button>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -314,5 +315,41 @@ textarea { resize: vertical; min-height: 60px; }
 
   <?php endif; ?>
 </div>
+
+<!-- ── Delete-Bestätigung Modal ───────────────────────────────── -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#1a2535;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:28px 32px;min-width:320px;max-width:400px">
+    <h3 style="margin:0 0 8px;color:#f87171">Objekt löschen</h3>
+    <p style="margin:0 0 16px;color:#9ab;font-size:14px">„<span id="del-name"></span>" wird unwiderruflich gelöscht.</p>
+    <form method="post" id="deleteForm">
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="id" id="del-id">
+      <label style="display:block;margin-bottom:4px;font-size:13px;color:#9ab">Passwort zur Bestätigung</label>
+      <input type="password" name="confirm_pass" id="del-pass" required autocomplete="current-password"
+        style="width:100%;box-sizing:border-box;padding:8px;background:#0f1e2e;border:1px solid rgba(255,255,255,.2);border-radius:4px;color:#d8e8f0;font-size:14px;margin-bottom:16px">
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" onclick="closeDeleteModal()" style="padding:7px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:4px;color:#9ab;cursor:pointer">Abbrechen</button>
+        <button type="submit" style="padding:7px 16px;background:#b91c1c;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:600">Löschen</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function openDeleteModal(id, name) {
+  document.getElementById('del-id').value = id;
+  document.getElementById('del-name').textContent = name;
+  document.getElementById('del-pass').value = '';
+  const m = document.getElementById('deleteModal');
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('del-pass').focus(), 80);
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+document.getElementById('deleteModal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
+});
+</script>
+
 </body>
 </html>
