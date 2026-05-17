@@ -64,7 +64,7 @@ function rl_add_robot(array $meta, string $zip_tmp, ?string $thumb_tmp): array|f
     }
 
     // Allowed types
-    $allowed_types = ['robot', 'endeffektor', 'umfeld', 'positioner', 'object', 'station', 'rail'];
+    $allowed_types = ['robot', 'endeffektor', 'umfeld', 'positioner', 'object', 'station', 'rail', 'fixture'];
     $type = trim($meta['type'] ?? 'robot');
     if (!in_array($type, $allowed_types)) $type = 'robot';
 
@@ -100,11 +100,14 @@ function rl_update_robot(string $id, array $meta, ?string $thumb_tmp): array|fal
     if ($idx === null) return false;
 
     $fields = ['name','type','marke','modell','achsen','reichweite_mm','nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm','beschreibung'];
+    $allowed_types = ['robot', 'endeffektor', 'umfeld', 'positioner', 'object', 'station', 'rail', 'fixture'];
     foreach ($fields as $k) {
         if (isset($meta[$k]) && trim($meta[$k]) !== '') {
-            $robots[$idx][$k] = in_array($k,['achsen']) ? intval($meta[$k])
+            $val = in_array($k,['achsen']) ? intval($meta[$k])
                 : (in_array($k,['nutzlast_kg','gewicht_kg','wiederholgenauigkeit_mm']) ? floatval($meta[$k])
                 : trim($meta[$k]));
+            if ($k === 'type' && !in_array($val, $allowed_types)) continue;
+            $robots[$idx][$k] = $val;
         }
     }
 
