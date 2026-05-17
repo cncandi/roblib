@@ -118,6 +118,12 @@ function rl_update_robot(string $id, array $meta, ?string $thumb_tmp): array|fal
         $robots[$idx]['thumb_url'] = BASE_URL . 'thumbs/' . $id . '.png';
     }
 
+    // ZIP überschreiben wenn neu hochgeladen
+    if (!empty($_FILES['zip']['tmp_name']) && $_FILES['zip']['error'] === UPLOAD_ERR_OK) {
+        $zip_dst = ROBOTS_DIR . $id . '.zip';
+        move_uploaded_file($_FILES['zip']['tmp_name'], $zip_dst);
+    }
+
     rl_save_robots($robots);
     return $robots[$idx];
 }
