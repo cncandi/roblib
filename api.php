@@ -107,6 +107,13 @@ case 'upload':
     if (strtolower(pathinfo($_FILES['zip']['name'], PATHINFO_EXTENSION)) !== 'zip')
         api_error(400, 'Nur .zip Dateien erlaubt.');
 
+    // Inhaltsvalidierung: echte ZIP-Signatur (PK..), nicht nur Endung
+    $fh = @fopen($_FILES['zip']['tmp_name'], 'rb');
+    $magic = $fh ? fread($fh, 4) : '';
+    if ($fh) fclose($fh);
+    if ($magic !== "PK\x03\x04" && $magic !== "PK\x05\x06" && $magic !== "PK\x07\x08")
+        api_error(400, 'Datei ist kein gültiges ZIP-Archiv.');
+
     $thumb_tmp = (!empty($_FILES['thumb']['tmp_name']) && $_FILES['thumb']['error'] === UPLOAD_ERR_OK)
                  ? $_FILES['thumb']['tmp_name']
                  : null;
@@ -205,8 +212,9 @@ case 'krl_list':
         str_contains(strtolower($p['tags']??''), $q)
     ));
     usort($progs, fn($a,$b) => ($b['date']??0)-($a['date']??0));
-    // Vorschau: erste 30 Zeilen der Datei
+    // Vorschau: bevorzugt gespeicherte Preview (beim Upload erzeugt); nur bei Altbestand Datei lesen
     foreach ($progs as &$p) {
+        if (!empty($p['preview'])) continue;
         $path = KRL_DIR.($p['id']??'').'/'.($p['filename']??'');
         if (file_exists($path)) {
             $lines = array_slice(explode("\n", file_get_contents($path)), 0, 30);
@@ -268,6 +276,7 @@ case 'krl_upload':
         'downloads'   => 0,
         'likes'       => 0,
         'size'        => strlen($content),
+        'preview'     => implode("\n", array_slice(explode("\n", $content), 0, 30)),
         'private'     => $private,
     ];
     krl_save($progs);

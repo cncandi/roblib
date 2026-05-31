@@ -4,6 +4,19 @@
 // =============================================================
 require_once __DIR__ . '/config.php';
 
+// ------ Robustes Schreiben: atomar + Backup ---------------------
+// Atomar: erst in Temp-Datei schreiben, dann umbenennen (rename ist atomar auf demselben FS).
+// Verhindert korrupte/halbe JSON-Dateien bei Parallelzugriff oder Abbruch.
+function rl_atomic_write(string $path, string $data): bool {
+    $dir = dirname($path);
+    if (!is_dir($dir)) @mkdir($dir, 0755, true);
+    $tmp = $path . '.tmp.' . getmypid() . '.' . bin2hex(random_bytes(3));
+    if (file_put_contents($tmp, $data, LOCK_EX) === false) return false;
+    // Vor dem Ersetzen eine Sicherung der bisherigen Datei behalten
+    if (file_exists($path)) @copy($path, $path . '.bak');
+    return rename($tmp, $path);
+}
+
 // ------ Daten laden / speichern --------------------------------
 
 function rl_load_robots(): array {
@@ -13,7 +26,7 @@ function rl_load_robots(): array {
 }
 
 function rl_save_robots(array $robots): void {
-    file_put_contents(DATA_FILE, json_encode(array_values($robots), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    rl_atomic_write(DATA_FILE, json_encode(array_values($robots), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 
 // ------ Authentifizierung --------------------------------------
@@ -167,7 +180,7 @@ function rl_load_users(): array {
 }
 
 function rl_save_users(array $users): void {
-    file_put_contents(USERS_FILE, json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    rl_atomic_write(USERS_FILE, json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 
 function rl_check_user_auth(string $user, string $pass): array|false {
@@ -222,10 +235,10 @@ function krl_init(): void {
 }
 
 function krl_load(): array  { return json_decode(file_get_contents(KRL_META_FILE), true, 512, JSON_THROW_ON_ERROR) ?? []; }
-function krl_save(array $d): void { file_put_contents(KRL_META_FILE, json_encode(array_values($d), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE), LOCK_EX); }
+function krl_save(array $d): void { rl_atomic_write(KRL_META_FILE, json_encode(array_values($d), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)); }
 
 function krl_pts_load(): array  { return json_decode(file_get_contents(KRL_PTS_FILE), true, 512, JSON_THROW_ON_ERROR) ?? []; }
-function krl_pts_save(array $d): void { file_put_contents(KRL_PTS_FILE, json_encode($d)); }
+function krl_pts_save(array $d): void { rl_atomic_write(KRL_PTS_FILE, json_encode($d)); }
 
 function krl_get_points(string $u): int {
     krl_init();
